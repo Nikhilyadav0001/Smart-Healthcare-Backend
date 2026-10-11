@@ -1,4 +1,4 @@
-package com.pm.configserver;
+package com.smarthealth.configserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
