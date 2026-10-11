@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package report.v1;
+
+import "google/protobuf/timestamp.proto";
+
+enum Disease {
+  DISEASE_UNSPECIFIED = 0;
+  DISEASE_DIABETES = 1;
+  DISEASE_HEART_DISEASE = 2;
+  DISEASE_STROKE = 3;
+}
+
+enum RiskLevel {
+  RISK_LEVEL_UNSPECIFIED = 0;
+  RISK_LEVEL_LOW = 1;
+  RISK_LEVEL_MEDIUM = 2;
+  RISK_LEVEL_HIGH = 3;
+}
+
+// Stateless: the request carries everything needed to render the PDF.
+message GenerateReportRequest {
+  string patient_name = 1;
+  Disease disease = 2;
+  double probability = 3;
+  RiskLevel risk_level = 4;
+  repeated string top_factors = 5;
+  repeated string recommendations = 6;
+  google.protobuf.Timestamp generated_at = 7;
+}
+
+message GenerateReportResponse {
+  bytes pdf = 1;
+  string file_name = 2;
+}
+
+service ReportService {
+  rpc GenerateReport(GenerateReportRequest) returns (GenerateReportResponse);
+}

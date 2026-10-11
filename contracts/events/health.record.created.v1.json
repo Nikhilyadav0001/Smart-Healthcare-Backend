@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "health.record.created.v1",
+  "title": "health.record.created v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId", "schemaVersion", "occurredAt", "patientId", "recordId"],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "schemaVersion": { "const": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "patientId": { "type": "string", "format": "uuid" },
+    "recordId": { "type": "string" }
+  }
+}

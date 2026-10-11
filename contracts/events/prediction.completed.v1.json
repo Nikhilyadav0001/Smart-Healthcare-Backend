@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "prediction.completed.v1",
+  "title": "prediction.completed v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId", "schemaVersion", "occurredAt", "patientId", "patientName", "patientEmail", "predictionId", "disease", "probability", "riskLevel", "topFactors", "recommendations"],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "schemaVersion": { "const": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "patientId": { "type": "string", "format": "uuid" },
+    "patientName": { "type": "string" },
+    "patientEmail": { "type": "string", "format": "email" },
+    "predictionId": { "type": "string", "format": "uuid" },
+    "disease": { "enum": ["DIABETES", "HEART_DISEASE", "STROKE"] },
+    "probability": { "type": "number", "minimum": 0, "maximum": 1 },
+    "riskLevel": { "enum": ["LOW", "MEDIUM", "HIGH"] },
+    "topFactors": { "type": "array", "items": { "type": "string" } },
+    "recommendations": { "type": "array", "items": { "type": "string" } }
+  }
+}

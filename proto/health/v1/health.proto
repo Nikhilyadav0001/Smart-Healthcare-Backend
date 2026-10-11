@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package health.v1;
+
+import "google/protobuf/timestamp.proto";
+
+enum Sex {
+  SEX_UNSPECIFIED = 0;
+  SEX_MALE = 1;
+  SEX_FEMALE = 2;
+  SEX_OTHER = 3;
+}
+
+enum SmokingStatus {
+  SMOKING_STATUS_UNSPECIFIED = 0;
+  SMOKING_STATUS_NEVER = 1;
+  SMOKING_STATUS_FORMER = 2;
+  SMOKING_STATUS_CURRENT = 3;
+}
+
+enum ActivityLevel {
+  ACTIVITY_LEVEL_UNSPECIFIED = 0;
+  ACTIVITY_LEVEL_LOW = 1;
+  ACTIVITY_LEVEL_MODERATE = 2;
+  ACTIVITY_LEVEL_HIGH = 3;
+}
+
+message HealthRecord {
+  string id = 1;
+  string patient_id = 2;
+  google.protobuf.Timestamp recorded_at = 3;
+  int32 age_years = 4;
+  Sex sex = 5;
+  double height_cm = 6;
+  double weight_kg = 7;
+  double bmi = 8;
+  int32 systolic_bp = 9;
+  int32 diastolic_bp = 10;
+  optional double fasting_glucose_mg_dl = 11;
+  optional double hba1c_percent = 12;
+  optional double total_cholesterol_mg_dl = 13;
+  optional double hdl_mg_dl = 14;
+  optional double ldl_mg_dl = 15;
+  SmokingStatus smoking_status = 16;
+  ActivityLevel activity_level = 17;
+  bool has_hypertension = 18;
+  bool has_heart_disease = 19;
+  bool family_history_diabetes = 20;
+}
+
+message GetLatestRecordRequest {
+  string patient_id = 1;
+}
+
+message GetLatestRecordResponse {
+  HealthRecord record = 1;
+}
+
+message GetRecordRequest {
+  string record_id = 1;
+}
+
+message GetRecordResponse {
+  HealthRecord record = 1;
+}
+
+service HealthService {
+  rpc GetLatestRecord(GetLatestRecordRequest) returns (GetLatestRecordResponse);
+  rpc GetRecord(GetRecordRequest) returns (GetRecordResponse);
+}
