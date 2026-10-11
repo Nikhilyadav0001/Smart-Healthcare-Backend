@@ -1,0 +1,72 @@
+services:
+  mariadb-primary:
+    image: mariadb:11.4
+    container_name: db-mariadb-primary
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      PROFILE_DB_PASSWORD: ${PROFILE_DB_PASSWORD}
+      REPL_PASSWORD: ${REPL_PASSWORD}
+      MARIADB_INITDB_SKIP_TZINFO: "1"
+    command:
+      - --server-id=1
+      - --log-bin=mariadb-bin
+      - --binlog-format=ROW
+    ports:
+      - "3308:3306"
+    volumes:
+      - mariadb_primary_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -p\"$$MARIADB_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mariadb-replica:
+    image: mariadb:11.4
+    container_name: db-mariadb-replica
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_INITDB_SKIP_TZINFO: "1"
+    command:
+      - --server-id=2
+      - --log-bin=mariadb-bin
+      - --relay-log=mariadb-relay
+      - --read-only=1
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_replica_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -p\"$$MARIADB_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # one-shot: points the replica at the primary, then exits
+  mariadb-replication-setup:
+    image: mariadb:11.4
+    container_name: db-mariadb-replication-setup
+    restart: "no"
+    depends_on:
+      mariadb-primary:
+        condition: service_healthy
+      mariadb-replica:
+        condition: service_healthy
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      REPL_PASSWORD: ${REPL_PASSWORD}
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        mariadb -h mariadb-replica -uroot -p"$$MARIADB_ROOT_PASSWORD" -e "
+          STOP REPLICA;
+          CHANGE MASTER TO MASTER_HOST='mariadb-primary', MASTER_PORT=3306,
+            MASTER_USER='repl', MASTER_PASSWORD='$$REPL_PASSWORD', MASTER_USE_GTID=slave_pos;
+          START REPLICA;"
+
+volumes:
+  mariadb_primary_data:
+  mariadb_replica_data:
