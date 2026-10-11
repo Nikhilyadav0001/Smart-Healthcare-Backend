@@ -1,0 +1,66 @@
+services:
+  mongo1:
+    image: mongo:7.0
+    container_name: db-mongo1
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27117"]
+    ports:
+      - "127.0.0.1:27117:27117"
+    volumes:
+      - mongo1_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --port 27117 --quiet --eval \"db.adminCommand('ping').ok\" | grep -q 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mongo2:
+    image: mongo:7.0
+    container_name: db-mongo2
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27118"]
+    ports:
+      - "127.0.0.1:27118:27118"
+    volumes:
+      - mongo2_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --port 27118 --quiet --eval \"db.adminCommand('ping').ok\" | grep -q 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mongo3:
+    image: mongo:7.0
+    container_name: db-mongo3
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27119"]
+    ports:
+      - "127.0.0.1:27119:27119"
+    volumes:
+      - mongo3_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --port 27119 --quiet --eval \"db.adminCommand('ping').ok\" | grep -q 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # one-shot: runs rs.initiate once, then exits
+  mongo-init:
+    image: mongo:7.0
+    container_name: db-mongo-init
+    restart: "no"
+    depends_on:
+      mongo1:
+        condition: service_healthy
+      mongo2:
+        condition: service_healthy
+      mongo3:
+        condition: service_healthy
+    volumes:
+      - ./init:/init:ro
+    entrypoint: ["mongosh", "mongodb://mongo1:27117/?directConnection=true", "--file", "/init/rs-init.js"]
+
+volumes:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:

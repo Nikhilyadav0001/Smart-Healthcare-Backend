@@ -5,6 +5,8 @@ include:
     env_file: .env
   - path: dbs/mariadb/compose.yml
     env_file: .env
+  - path: dbs/mongodb/compose.yml
+    env_file: .env
   - path: dbs/redis/compose.yml
     env_file: .env
   - path: dbs/mailpit/compose.yml
