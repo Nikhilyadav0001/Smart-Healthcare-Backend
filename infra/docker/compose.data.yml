@@ -7,6 +7,8 @@ include:
     env_file: .env
   - path: dbs/mongodb/compose.yml
     env_file: .env
+  - path: dbs/kafka/compose.yml
+    env_file: .env
   - path: dbs/redis/compose.yml
     env_file: .env
   - path: dbs/mailpit/compose.yml
