@@ -1,0 +1,27 @@
+# Java
+target/
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Node
+node_modules/
+dist/
+
+# Go
+services/go-service/bin/
+services/go-service/gen/
+
+# Secrets and local data
+.env
+*.env.local
+infra/compose/.env
+ml/data/
+
+# OS
+.DS_Store
+Thumbs.db
