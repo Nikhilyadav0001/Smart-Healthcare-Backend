@@ -1,4 +1,4 @@
-package com.pm.discoveryserver;
+package com.smarthealth.discoveryserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
