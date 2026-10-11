@@ -7,8 +7,5 @@ mariadb -uroot -p"${MARIADB_ROOT_PASSWORD}" <<-EOSQL
   CREATE USER 'profile_user'@'%' IDENTIFIED BY '${PROFILE_DB_PASSWORD}';
   GRANT ALL PRIVILEGES ON profile_db.* TO 'profile_user'@'%';
 
-  CREATE USER 'repl'@'%' IDENTIFIED BY '${REPL_PASSWORD}';
-  GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
-
   FLUSH PRIVILEGES;
 EOSQL
