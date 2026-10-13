@@ -1,10 +1,10 @@
-package com.pm.adminserver;
+package com.smarthealth.apigateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class AdminServerApplicationTests {
+class ApiGatewayApplicationTests {
 
     @Test
     void contextLoads() {

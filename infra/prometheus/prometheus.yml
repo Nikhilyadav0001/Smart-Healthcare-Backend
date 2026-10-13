@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: spring-services
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8090"]
+        labels:
+          service: service-template
+      - targets: ["host.docker.internal:8080"]
+        labels:
+          service: api-gateway
+      - targets: ["host.docker.internal:8761"]
+        labels:
+          service: discovery-server
+      - targets: ["host.docker.internal:9090"]
+        labels:
+          service: admin-server
+
+  - job_name: config-server
+    metrics_path: /actuator/prometheus
+    basic_auth:
+      username: config
+      password: dev-config-pass
+    static_configs:
+      - targets: [ "host.docker.internal:8888" ]
+        labels:
+          service: config-server

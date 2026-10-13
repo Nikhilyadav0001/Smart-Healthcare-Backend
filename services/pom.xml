@@ -20,6 +20,9 @@
     <modules>
         <module>service-template</module>
         <module>config-server</module>
+        <module>admin-server</module>
+        <module>api-gateway</module>
+        <module>observability-starter</module>
     </modules>
 
     <properties>

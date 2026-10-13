@@ -1,9 +1,12 @@
 spring:
   application:
     name: service-template
-
-server:
-  port: 8090
+  config:
+    import: "configserver:http://localhost:8888"
+  cloud:
+    config:
+      username: config
+      password: dev-config-pass
 
 management:
   endpoints:

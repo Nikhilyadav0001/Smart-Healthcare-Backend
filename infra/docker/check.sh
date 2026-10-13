@@ -15,13 +15,13 @@ maria_db() { docker exec db-mariadb sh -c 'mariadb -uroot -p"$MARIADB_ROOT_PASSW
 mongo_primary() { docker exec db-mongo mongosh --port 27117 --quiet --eval 'db.hello().isWritablePrimary' | grep -q true; }
 
 kafka_topics() {
-  [ "$(docker exec db-kafka-1 /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka-1:9092 --list | grep -c .)" -ge 14 ]
+    [ "$(docker exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka-1:9092 --list | grep -c .)" -ge 14 ]
 }
 
 redis_ping() { docker exec db-redis sh -c 'redis-cli -a "$REDIS_PASSWORD" ping 2>/dev/null | grep -q PONG'; }
 pg_dbs()     { docker exec db-postgres psql -U postgres -d auth_db -c "select 1" && docker exec db-postgres psql -U postgres -d prediction_db -c "select 1"; }
 
-for c in db-postgres db-redis tool-mailpit db-mariadb db-mongo db-kafka-1; do
+for c in db-postgres db-redis tool-mailpit db-mariadb db-mongo kafka; do
   check "healthy: $c" healthy "$c"
 done
 

@@ -41,6 +41,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.smarthealth</groupId>
+            <artifactId>observability-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>

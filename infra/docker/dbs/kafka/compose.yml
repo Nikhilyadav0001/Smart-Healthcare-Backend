@@ -1,7 +1,7 @@
 services:
   kafka-1:
     image: apache/kafka:3.9.0
-    container_name: db-kafka-1
+    container_name: kafka
     restart: unless-stopped
     environment:
       CLUSTER_ID: ${KAFKA_CLUSTER_ID:-MkU3OEVBNTcwNTJENDM2Qk}
