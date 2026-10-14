@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: user-profile-service
+  config:
+    import: "configserver:http://localhost:8888"
+  cloud:
+    config:
+      username: config
+      password: dev-config-pass
+  datasource:
+    password: ${PROFILE_DB_PASSWORD}
+  data:
+    redis:
+      password: ${REDIS_PASSWORD}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

@@ -23,6 +23,7 @@
         <module>admin-server</module>
         <module>api-gateway</module>
         <module>observability-starter</module>
+        <module>user-profile-service</module>
     </modules>
 
     <properties>
