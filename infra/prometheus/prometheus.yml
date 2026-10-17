@@ -21,6 +21,9 @@ scrape_configs:
       - targets: ["host.docker.internal:9090"]
         labels:
           service: admin-server
+      - targets: [ "host.docker.internal:8081" ]
+        labels:
+          service: auth-service
       - targets: [ "host.docker.internal:8082" ]
         labels:
           service: user-profile-service

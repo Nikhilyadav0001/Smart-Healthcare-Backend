@@ -1,4 +1,4 @@
-package com.smarthealth.service_template.controller;
+package com.smarthealth.userprofile.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/ping")
-@Tag(name = "Ping", description = "Template endpoint that proves Swagger works")
+@Tag(name = "Ping", description = "Health check endpoint")
 public class PingController {
 
     private static final Logger log = LoggerFactory.getLogger(PingController.class);

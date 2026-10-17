@@ -8,6 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
       PREDICTION_DB_PASSWORD: ${PREDICTION_DB_PASSWORD}
+      TZ: "Asia/Kolkata"
     ports:
       - "5432:5432"
     volumes:
