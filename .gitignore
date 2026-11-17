@@ -12,14 +12,23 @@ target/
 node_modules/
 dist/
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+venv/
+.venv/
+
 # Go
 services/go-service/bin/
-services/go-service/gen/
+*.exe
 
 # Secrets and local data
 .env
 *.env.local
 infra/compose/.env
+infra/docker/.env
 ml/data/
 
 # OS

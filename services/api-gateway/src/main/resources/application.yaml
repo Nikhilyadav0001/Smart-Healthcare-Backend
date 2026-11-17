@@ -1,9 +1,79 @@
+server:
+  port: 8080
+  shutdown: graceful
+  reactive:
+    session:
+      cookie:
+        name: GW_SESSION
+
 spring:
   application:
     name: api-gateway
   config:
-    import: "configserver:http://localhost:8888"
+    import: "optional:configserver:http://localhost:8888"
   cloud:
     config:
       username: config
       password: dev-config-pass
+      fail-fast: false
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: auth-service-route
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - RewritePath=/api/auth/(?<segment>.*), /auth/$\{segment}
+            - id: prediction-service-route
+              uri: http://localhost:8085
+              predicates:
+                - Path=/api/predictions/**
+              filters:
+                - RewritePath=/api/predictions/(?<segment>.*), /api/v1/predictions/$\{segment}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          healthapp:
+            provider: auth-server
+            client-id: healthapp-bff
+            client-secret: ${BFF_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - profile
+              - email
+        provider:
+          auth-server:
+            issuer-uri: http://localhost:8081
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG

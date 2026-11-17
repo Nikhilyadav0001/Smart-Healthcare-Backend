@@ -1,22 +1,79 @@
+server:
+  port: 8081
+  servlet:
+    session:
+      tracking-modes: cookie
+      cookie:
+        name: AUTH_SESSION
+
 spring:
   application:
     name: auth-service
   config:
-    import: "configserver:http://localhost:8888"
+    import: "optional:configserver:http://localhost:8888"
   cloud:
     config:
       username: config
       password: dev-config-pass
+      fail-fast: false
+
   datasource:
+    url: jdbc:postgresql://${AUTH_DB_HOST:localhost}:${AUTH_DB_PORT:5433}/auth_db?options=-c%20timezone=UTC
+    username: auth_user
     password: ${AUTH_DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
   data:
     redis:
+      host: localhost
+      port: 6379
       password: ${REDIS_PASSWORD}
+
+  kafka:
+    bootstrap-servers: localhost:19092
+    template:
+      observation-enabled: true
+    consumer:
+      properties:
+        spring.json.add.type.headers: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope:
+              - openid
+              - profile
+              - email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+          github:
+            client-id: ${GITHUB_CLIENT_ID:}
+            client-secret: ${GITHUB_CLIENT_SECRET:}
+            scope:
+              - read:user
+              - user:email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
 
   jackson:
     time-zone: Asia/Kolkata
 
 eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
 
@@ -35,3 +92,8 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+auth:
+  security:
+    max-failed-attempts: 5
+    lock-duration-minutes: 15
