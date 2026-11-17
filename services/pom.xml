@@ -25,6 +25,8 @@
         <module>observability-starter</module>
         <module>user-profile-service</module>
         <module>auth-service</module>
+        <module>prediction-service</module>
+        <module>health-data-service</module>
     </modules>
 
     <properties>
