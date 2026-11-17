@@ -10,21 +10,22 @@ spring:
 
   cloud:
     config:
-      username: config
-      password: dev-config-pass
+      username: ${CONFIG_SERVER_USERNAME:config}
+      password: ${CONFIG_SERVER_PASSWORD:}
+      fail-fast: false
 
   mongodb:
-    uri: mongodb://127.0.0.1:27117/health_db?replicaSet=rs0&directConnection=true&uuidRepresentation=standard
+    uri: ${MONGODB_URI:mongodb://127.0.0.1:27117/health_db?replicaSet=rs0&directConnection=true&uuidRepresentation=standard}
 
   data:
     mongodb:
-      uri: mongodb://127.0.0.1:27117/health_db?replicaSet=rs0&directConnection=true&uuidRepresentation=standard
+      uri: ${MONGODB_URI:mongodb://127.0.0.1:27117/health_db?replicaSet=rs0&directConnection=true&uuidRepresentation=standard}
       auto-index-creation: true
       uuid-representation: standard
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
+      password: ${REDIS_PASSWORD:}
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:19092}

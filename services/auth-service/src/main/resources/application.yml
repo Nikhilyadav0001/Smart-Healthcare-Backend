@@ -13,14 +13,14 @@ spring:
     import: "optional:configserver:http://localhost:8888"
   cloud:
     config:
-      username: config
-      password: dev-config-pass
+      username: ${CONFIG_SERVER_USERNAME:config}
+      password: ${CONFIG_SERVER_PASSWORD:}
       fail-fast: false
 
   datasource:
     url: jdbc:postgresql://${AUTH_DB_HOST:localhost}:${AUTH_DB_PORT:5433}/auth_db?options=-c%20timezone=UTC
-    username: auth_user
-    password: ${AUTH_DB_PASSWORD}
+    username: ${AUTH_DB_USERNAME:auth_user}
+    password: ${AUTH_DB_PASSWORD:}
 
   jpa:
     hibernate:
@@ -32,12 +32,12 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: ${REDIS_PASSWORD}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 
   kafka:
-    bootstrap-servers: localhost:19092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:19092}
     template:
       observation-enabled: true
     consumer:

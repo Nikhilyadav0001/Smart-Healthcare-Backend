@@ -2,11 +2,12 @@ spring:
   application:
     name: service-template
   config:
-    import: "configserver:http://localhost:8888"
+    import: "optional:configserver:http://localhost:8888"
   cloud:
     config:
-      username: config
-      password: dev-config-pass
+      username: ${CONFIG_SERVER_USERNAME:config}
+      password: ${CONFIG_SERVER_PASSWORD:}
+      fail-fast: false
 
 management:
   endpoints:

@@ -7,17 +7,17 @@ spring:
     config:
       server:
         native:
-          search-locations: file:C:/Users/nikhi/OneDrive/Desktop/smart-healthcare/smart-healthcare-config
+          search-locations: ${CONFIG_SEARCH_LOCATIONS:file:./smart-healthcare-config,file:../smart-healthcare-config,file:C:/Users/nikhi/OneDrive/Desktop/smart-healthcare/smart-healthcare-config}
         git:
           uri: https://github.com/Nikhilyadav0001/smart-healthcare-config.git
           default-label: main
           username: Nikhilyadav0001
-          password: ${CONFIG_GIT_TOKEN}
+          password: ${CONFIG_GIT_TOKEN:}
           force-pull: true
   security:
     user:
-      name: config
-      password: ${CONFIG_SERVER_PASSWORD:dev-config-pass}
+      name: ${CONFIG_SERVER_USERNAME:config}
+      password: ${CONFIG_SERVER_PASSWORD:}
 
 server:
   port: 8888

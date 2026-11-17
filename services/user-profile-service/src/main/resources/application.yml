@@ -2,16 +2,32 @@ spring:
   application:
     name: user-profile-service
   config:
-    import: "configserver:http://localhost:8888"
+    import: "optional:configserver:http://localhost:8888"
   cloud:
     config:
-      username: config
-      password: dev-config-pass
+      username: ${CONFIG_SERVER_USERNAME:config}
+      password: ${CONFIG_SERVER_PASSWORD:}
+      fail-fast: false
   datasource:
-    password: ${PROFILE_DB_PASSWORD}
+    url: jdbc:mariadb://${PROFILE_DB_HOST:localhost}:${PROFILE_DB_PORT:3308}/profile_db
+    username: ${PROFILE_DB_USERNAME:profile_user}
+    password: ${PROFILE_DB_PASSWORD:}
+    driver-class-name: org.mariadb.jdbc.Driver
   data:
     redis:
-      password: ${REDIS_PASSWORD}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:19092}
+    consumer:
+      group-id: user-profile-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 eureka:
   instance:

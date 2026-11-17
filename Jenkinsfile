@@ -16,9 +16,15 @@ pipeline {
 
         stage('2. Build & Test Java Backend') {
             steps {
-                dir('services') {
-                    echo 'Running Maven reactor compilation and tests on JDK 25...'
-                    bat '.\\mvnw.cmd test'
+                echo 'Running Maven reactor compilation and tests on JDK 25...'
+                withCredentials([file(credentialsId: 'smarthealth-secrets', variable: 'SECRETS_FILE')]) {
+                    bat '''
+                        copy /Y "%SECRETS_FILE%" .env
+                        copy /Y "%SECRETS_FILE%" services\\.env
+                    '''
+                    dir('services') {
+                        bat '.\\mvnw.cmd test'
+                    }
                 }
             }
             post {
