@@ -4,6 +4,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +20,7 @@ public class AuthenticatedUser implements UserDetails {
             List<SimpleGrantedAuthority> authorities) {
 
         this.user = user;
-        this.authorities = List.copyOf(authorities);
+        this.authorities = authorities != null ? new ArrayList<>(authorities) : new ArrayList<>();
     }
 
     public User getUser() {
@@ -26,11 +28,11 @@ public class AuthenticatedUser implements UserDetails {
     }
 
     public UUID getUserId() {
-        return user.getId();
+        return user != null ? user.getId() : null;
     }
 
     public String getEmail() {
-        return user.getEmail();
+        return user != null ? user.getEmail() : null;
     }
 
     @Override
@@ -40,12 +42,12 @@ public class AuthenticatedUser implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPasswordHash();
+        return user != null ? user.getPasswordHash() : null;
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return user != null ? user.getEmail() : null;
     }
 
     @Override
@@ -55,13 +57,11 @@ public class AuthenticatedUser implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        if (user.getLockedUntil() == null) {
+        if (user == null || user.getLockedUntil() == null) {
             return true;
         }
 
-        return user.getLockedUntil().isBefore(
-                java.time.OffsetDateTime.now()
-        );
+        return user.getLockedUntil().isBefore(OffsetDateTime.now());
     }
 
     @Override
@@ -71,7 +71,8 @@ public class AuthenticatedUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return "ACTIVE".equalsIgnoreCase(user.getStatus())
+        return user != null
+                && "ACTIVE".equalsIgnoreCase(user.getStatus())
                 && user.isEmailVerified();
     }
 }

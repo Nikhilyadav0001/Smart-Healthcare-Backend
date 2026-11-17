@@ -1,9 +1,14 @@
 package com.smarthealth.auth.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smarthealth.auth.dto.UserRegisteredEvent;
+import com.smarthealth.auth.model.OutboxEvent;
 import com.smarthealth.auth.model.User;
 import com.smarthealth.auth.model.UserIdentity;
 import com.smarthealth.auth.model.UserRole;
 import com.smarthealth.auth.model.UserStatus;
+import com.smarthealth.auth.repository.OutboxEventRepository;
 import com.smarthealth.auth.repository.UserIdentityRepository;
 import com.smarthealth.auth.repository.UserRepository;
 import com.smarthealth.auth.repository.UserRoleRepository;
@@ -18,17 +23,28 @@ import java.util.UUID;
 @Service
 public class SocialLoginService {
 
+    private static final String OUTBOX_STATUS_PENDING = "PENDING";
+    private static final String OUTBOX_EVENT_TYPE = "user.registered";
+    private static final String OUTBOX_AGGREGATE_TYPE = "USER";
+
     private final UserRepository userRepository;
     private final UserIdentityRepository userIdentityRepository;
     private final UserRoleRepository userRoleRepository;
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
 
     public SocialLoginService(
             UserRepository userRepository,
             UserIdentityRepository userIdentityRepository,
-            UserRoleRepository userRoleRepository) {
+            UserRoleRepository userRoleRepository,
+            OutboxEventRepository outboxEventRepository,
+            ObjectMapper objectMapper) {
+
         this.userRepository = userRepository;
         this.userIdentityRepository = userIdentityRepository;
         this.userRoleRepository = userRoleRepository;
+        this.outboxEventRepository = outboxEventRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -39,11 +55,15 @@ public class SocialLoginService {
             boolean emailVerified) {
 
         if (provider == null || provider.isBlank()) {
-            throw new IllegalArgumentException("Social provider is required");
+            throw new IllegalArgumentException(
+                    "Social provider is required"
+            );
         }
 
         if (providerSubject == null || providerSubject.isBlank()) {
-            throw new IllegalArgumentException("Provider subject is required");
+            throw new IllegalArgumentException(
+                    "Provider subject is required"
+            );
         }
 
         if (email == null || email.isBlank()) {
@@ -58,20 +78,27 @@ public class SocialLoginService {
             );
         }
 
-        String normalizedProvider = provider.trim().toUpperCase(Locale.ROOT);
-        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+        String normalizedProvider =
+                provider.trim().toUpperCase(Locale.ROOT);
+
+        String normalizedProviderSubject =
+                providerSubject.trim();
+
+        String normalizedEmail =
+                email.trim().toLowerCase(Locale.ROOT);
 
         // ------------------------------------------------------------
-        // 1. Existing social identity
+        // 1. Existing provider identity
         // ------------------------------------------------------------
 
         var existingIdentity =
                 userIdentityRepository.findByProviderAndProviderSubject(
                         normalizedProvider,
-                        providerSubject
+                        normalizedProviderSubject
                 );
 
         if (existingIdentity.isPresent()) {
+
             User user = userRepository.findById(
                     existingIdentity.get().getUserId()
             ).orElseThrow(() ->
@@ -92,18 +119,16 @@ public class SocialLoginService {
         var existingUser =
                 userRepository.findByEmailIgnoreCase(normalizedEmail);
 
-        User user;
-
         if (existingUser.isPresent()) {
-            user = existingUser.get();
+
+            User user = existingUser.get();
 
             ensureUserCanLogin(user);
 
-            // Link the verified social identity to the existing account.
             createIdentity(
                     user.getId(),
                     normalizedProvider,
-                    providerSubject,
+                    normalizedProviderSubject,
                     normalizedEmail
             );
 
@@ -111,19 +136,24 @@ public class SocialLoginService {
         }
 
         // ------------------------------------------------------------
-        // 3. Create a new social user
+        // 3. Create a brand-new social user
         // ------------------------------------------------------------
 
         OffsetDateTime now =
                 OffsetDateTime.now(ZoneOffset.UTC);
 
-        user = new User();
+        User user = new User();
 
         user.setId(UUID.randomUUID());
         user.setEmail(normalizedEmail);
+
+        // Social users authenticate through the external provider.
         user.setPasswordHash(null);
+
+        // Provider has already verified the user's identity/email.
         user.setStatus(UserStatus.ACTIVE.name());
         user.setEmailVerified(true);
+
         user.setFailedLoginAttempts(0);
         user.setLockedUntil(null);
         user.setCreatedAt(now);
@@ -132,7 +162,7 @@ public class SocialLoginService {
         User savedUser = userRepository.save(user);
 
         // ------------------------------------------------------------
-        // 4. Assign the default USER role
+        // 4. Assign default USER role
         // ------------------------------------------------------------
 
         UserRole.UserRoleId roleId =
@@ -141,18 +171,59 @@ public class SocialLoginService {
                         "USER"
                 );
 
-        userRoleRepository.save(new UserRole(roleId));
+        userRoleRepository.save(
+                new UserRole(roleId)
+        );
 
         // ------------------------------------------------------------
-        // 5. Store the social identity
+        // 5. Store federated identity
         // ------------------------------------------------------------
 
         createIdentity(
                 savedUser.getId(),
                 normalizedProvider,
-                providerSubject,
+                normalizedProviderSubject,
                 normalizedEmail
         );
+
+        // ------------------------------------------------------------
+        // 6. Publish user.registered through transactional outbox
+        //
+        // Social users do not need email verification, therefore
+        // verificationToken is null.
+        // ------------------------------------------------------------
+
+        UserRegisteredEvent event =
+                new UserRegisteredEvent(
+                        savedUser.getId(),
+                        savedUser.getEmail(),
+                        null
+                );
+
+        String payload = serializeEvent(event);
+
+        OutboxEvent outboxEvent = new OutboxEvent();
+
+        outboxEvent.setId(UUID.randomUUID());
+        outboxEvent.setAggregateType(
+                OUTBOX_AGGREGATE_TYPE
+        );
+        outboxEvent.setAggregateId(
+                savedUser.getId()
+        );
+        outboxEvent.setEventType(
+                OUTBOX_EVENT_TYPE
+        );
+        outboxEvent.setPayload(payload);
+        outboxEvent.setStatus(
+                OUTBOX_STATUS_PENDING
+        );
+        outboxEvent.setAttempts(0);
+        outboxEvent.setAvailableAt(now);
+        outboxEvent.setCreatedAt(now);
+        outboxEvent.setPublishedAt(null);
+
+        outboxEventRepository.save(outboxEvent);
 
         return savedUser;
     }
@@ -195,6 +266,20 @@ public class SocialLoginService {
         if (UserStatus.REJECTED.name().equals(user.getStatus())) {
             throw new IllegalStateException(
                     "User account has been rejected"
+            );
+        }
+    }
+
+    private String serializeEvent(UserRegisteredEvent event) {
+
+        try {
+            return objectMapper.writeValueAsString(event);
+
+        } catch (JsonProcessingException exception) {
+
+            throw new IllegalStateException(
+                    "Failed to serialize user.registered event",
+                    exception
             );
         }
     }
