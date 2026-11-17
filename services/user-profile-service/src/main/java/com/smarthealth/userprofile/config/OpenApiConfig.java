@@ -1,4 +1,4 @@
-package com.smarthealth.service_template.config;
+package com.smarthealth.userprofile.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -12,19 +12,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    @Bean
-    OpenAPI openAPI(@Value("${spring.application.name}") String appName) {
-        String scheme = "bearerAuth";
-        return new OpenAPI()
-                .info(new Info()
-                        .title(appName + " API")
-                        .version("v1")
-                        .description("Demo project. Fake data only. Not medical advice."))
-                .addSecurityItem(new SecurityRequirement().addList(scheme))
-                .components(new Components().addSecuritySchemes(scheme,
-                        new SecurityScheme()
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")));
-    }
+        @Bean
+        OpenAPI openAPI(@Value("${spring.application.name}") String appName) {
+                String scheme = "bearerAuth";
+                return new OpenAPI()
+                                .info(new Info()
+                                                .title(appName + " API")
+                                                .version("v1")
+                                                .description("Demo project. Fake data only. Not medical advice."))
+                                .addSecurityItem(new SecurityRequirement().addList(scheme))
+                                .components(new Components().addSecuritySchemes(scheme,
+                                                new SecurityScheme()
+                                                                .type(SecurityScheme.Type.HTTP)
+                                                                .scheme("bearer")
+                                                                .bearerFormat("JWT")));
+        }
 }

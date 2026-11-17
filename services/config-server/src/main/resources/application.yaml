@@ -1,9 +1,13 @@
 spring:
   application:
     name: config-server
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:native}
   cloud:
     config:
       server:
+        native:
+          search-locations: file:C:/Users/nikhi/OneDrive/Desktop/smart-healthcare/smart-healthcare-config
         git:
           uri: https://github.com/Nikhilyadav0001/smart-healthcare-config.git
           default-label: main
