@@ -68,12 +68,24 @@ pipeline {
                 dir('services/go-service') { bat 'docker build -t smarthealth/go-service:latest .' }
             }
         }
+
+        stage('6. Deploy to Kubernetes (CD)') {
+            steps {
+                echo 'Deploying application manifests to Kubernetes (smart-healthcare namespace)...'
+                bat 'kubectl apply -k infra/k8s/base'
+                echo 'Verifying rollout status of critical microservices...'
+                bat 'kubectl rollout status deployment/postgres -n smart-healthcare --timeout=120s'
+                bat 'kubectl rollout status deployment/kafka -n smart-healthcare --timeout=120s'
+                bat 'kubectl rollout status deployment/api-gateway -n smart-healthcare --timeout=120s'
+            }
+        }
     }
 
     post {
         success {
             echo '====================================================='
             echo '  Smart Healthcare CI/CD Pipeline Succeeded!          '
+            echo '  All Microservices Tested, Built & Deployed to K8s. '
             echo '====================================================='
         }
         failure {
