@@ -30,5 +30,16 @@ management:
     shutdown:
       enabled: true
     health:
+      show-details: always
+      show-components: always
       probes:
         enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+    process:
+      enabled: true
