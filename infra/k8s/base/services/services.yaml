@@ -1,0 +1,602 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-server
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-server
+  template:
+    metadata:
+      labels:
+        app: config-server
+    spec:
+      containers:
+        - name: config-server
+          image: smarthealth/config-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8888
+          env:
+            - name: CONFIG_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: smarthealth-config
+                  key: CONFIG_SERVER_USERNAME
+            - name: CONFIG_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_SERVER_PASSWORD
+            - name: CONFIG_GIT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_GIT_TOKEN
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-server
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: config-server
+  ports:
+    - port: 8888
+      targetPort: 8888
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-server
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discovery-server
+  template:
+    metadata:
+      labels:
+        app: discovery-server
+    spec:
+      containers:
+        - name: discovery-server
+          image: smarthealth/discovery-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8761
+          env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://config-server:8888"
+            - name: CONFIG_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: smarthealth-config
+                  key: CONFIG_SERVER_USERNAME
+            - name: CONFIG_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_SERVER_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-server
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: discovery-server
+  ports:
+    - port: 8761
+      targetPort: 8761
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-server
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-server
+  template:
+    metadata:
+      labels:
+        app: admin-server
+    spec:
+      containers:
+        - name: admin-server
+          image: smarthealth/admin-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+          env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://config-server:8888"
+            - name: CONFIG_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: smarthealth-config
+                  key: CONFIG_SERVER_USERNAME
+            - name: CONFIG_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_SERVER_PASSWORD
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-server:8761/eureka/"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-server
+  namespace: smart-healthcare
+spec:
+  type: LoadBalancer
+  selector:
+    app: admin-server
+  ports:
+    - port: 9090
+      targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: smarthealth/api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://config-server:8888"
+            - name: CONFIG_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: smarthealth-config
+                  key: CONFIG_SERVER_USERNAME
+            - name: CONFIG_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_SERVER_PASSWORD
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-server:8761/eureka/"
+            - name: BFF_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: BFF_CLIENT_SECRET
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: smart-healthcare
+spec:
+  type: LoadBalancer
+  selector:
+    app: api-gateway
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: smarthealth/auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://config-server:8888"
+            - name: CONFIG_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: smarthealth-config
+                  key: CONFIG_SERVER_USERNAME
+            - name: CONFIG_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_SERVER_PASSWORD
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-server:8761/eureka/"
+            - name: AUTH_DB_HOST
+              value: "postgres"
+            - name: AUTH_DB_PORT
+              value: "5432"
+            - name: AUTH_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: AUTH_DB_PASSWORD
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: REDIS_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: GOOGLE_CLIENT_SECRET
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: GITHUB_CLIENT_ID
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: GITHUB_CLIENT_SECRET
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: 600m
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 8081
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-profile-service
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-profile-service
+  template:
+    metadata:
+      labels:
+        app: user-profile-service
+    spec:
+      containers:
+        - name: user-profile-service
+          image: smarthealth/user-profile-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+            - containerPort: 9082
+          env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://config-server:8888"
+            - name: CONFIG_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: smarthealth-config
+                  key: CONFIG_SERVER_USERNAME
+            - name: CONFIG_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_SERVER_PASSWORD
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-server:8761/eureka/"
+            - name: PROFILE_DB_HOST
+              value: "mariadb"
+            - name: PROFILE_DB_PORT
+              value: "3306"
+            - name: PROFILE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: PROFILE_DB_PASSWORD
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: REDIS_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: 600m
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-profile-service
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: user-profile-service
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082
+    - name: grpc
+      port: 9082
+      targetPort: 9082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-data-service
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: health-data-service
+  template:
+    metadata:
+      labels:
+        app: health-data-service
+    spec:
+      containers:
+        - name: health-data-service
+          image: smarthealth/health-data-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+            - containerPort: 9083
+          env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://config-server:8888"
+            - name: CONFIG_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: smarthealth-config
+                  key: CONFIG_SERVER_USERNAME
+            - name: CONFIG_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_SERVER_PASSWORD
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-server:8761/eureka/"
+            - name: SPRING_DATA_MONGODB_URI
+              value: "mongodb://mongodb:27017/health_data_db"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: 600m
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-data-service
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: health-data-service
+  ports:
+    - name: http
+      port: 8083
+      targetPort: 8083
+    - name: grpc
+      port: 9083
+      targetPort: 9083
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prediction-service
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prediction-service
+  template:
+    metadata:
+      labels:
+        app: prediction-service
+    spec:
+      containers:
+        - name: prediction-service
+          image: smarthealth/prediction-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8085
+          env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://config-server:8888"
+            - name: CONFIG_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: smarthealth-config
+                  key: CONFIG_SERVER_USERNAME
+            - name: CONFIG_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: CONFIG_SERVER_PASSWORD
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-server:8761/eureka/"
+            - name: PREDICTION_DB_HOST
+              value: "postgres"
+            - name: PREDICTION_DB_PORT
+              value: "5432"
+            - name: PREDICTION_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: PREDICTION_DB_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: 600m
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prediction-service
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: prediction-service
+  ports:
+    - port: 8085
+      targetPort: 8085
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-service
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-service
+  template:
+    metadata:
+      labels:
+        app: go-service
+    spec:
+      containers:
+        - name: go-service
+          image: smarthealth/go-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+            - containerPort: 9095
+          env:
+            - name: ENV
+              value: "production"
+            - name: HTTP_PORT
+              value: "8086"
+            - name: GRPC_PORT
+              value: "9095"
+            - name: KAFKA_BROKERS
+              value: "kafka:9092"
+            - name: REDIS_HOST
+              value: "redis:6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: REDIS_PASSWORD
+            - name: SMTP_HOST
+              value: "mailpit"
+            - name: SMTP_PORT
+              value: "1025"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-service
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: go-service
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+    - name: grpc
+      port: 9095
+      targetPort: 9095
