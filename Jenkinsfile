@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         CONFIG_GIT_TOKEN = credentials('CONFIG_GIT_TOKEN')
-        JAVA_HOME = 'C:\\Program Files\\Eclipse Adoptium\\jdk-25.0.2.10-hotspot'
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-25.0.2'
         PATH = "${JAVA_HOME}\\bin;C:\\Program Files\\Go\\bin;C:\\Program Files\\nodejs;C:\\Program Files\\Git\\cmd;${env.PATH}"
     }
 
