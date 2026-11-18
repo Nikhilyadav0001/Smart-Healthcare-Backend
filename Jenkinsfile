@@ -1,31 +1,26 @@
 pipeline {
     agent any
 
-    options {
-        timeout(time: 30, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '10'))
+    environment {
+        CONFIG_GIT_TOKEN = credentials('CONFIG_GIT_TOKEN')
+        JAVA_HOME = 'C:\\Program Files\\Eclipse Adoptium\\jdk-25.0.2.10-hotspot'
+        PATH = "${JAVA_HOME}\\bin;C:\\Program Files\\Go\\bin;C:\\Program Files\\nodejs;C:\\Program Files\\Git\\cmd;${env.PATH}"
     }
 
     stages {
         stage('1. Checkout Monorepo') {
             steps {
-                echo 'Checking out latest commit from GitHub...'
+                echo 'Checking out source repository...'
                 checkout scm
             }
         }
 
         stage('2. Build & Test Java Backend') {
             steps {
-                echo 'Running Maven reactor compilation and tests on JDK 25...'
-                withCredentials([file(credentialsId: 'smarthealth-secrets', variable: 'SECRETS_FILE')]) {
-                    bat '''
-                        copy /Y "%SECRETS_FILE%" .env
-                        copy /Y "%SECRETS_FILE%" services\\.env
-                        for /d %%D in (services\\*) do if exist "%%D\\target\\surefire-reports" rmdir /s /q "%%D\\target\\surefire-reports"
-                    '''
-                    dir('services') {
-                        bat '.\\mvnw.cmd package'
-                    }
+                dir('services') {
+                    echo 'Cleaning stale test reports and running Maven packaging on reactor...'
+                    bat 'for /d %%D in (*) do if exist "%%D\\target\\surefire-reports" rmdir /s /q "%%D\\target\\surefire-reports"'
+                    bat '.\\mvnw.cmd package'
                 }
             }
             post {
@@ -62,12 +57,15 @@ pipeline {
         stage('5. Package Docker Images') {
             steps {
                 echo 'Building Docker container images...'
-                dir('services/go-service') {
-                    bat 'docker build -t smarthealth/go-service:latest .'
-                }
-                dir('services/prediction-service') {
-                    bat 'docker build -t smarthealth/prediction-service:latest .'
-                }
+                dir('services/config-server') { bat 'docker build -t smarthealth/config-server:latest .' }
+                dir('services/discovery-server') { bat 'docker build -t smarthealth/discovery-server:latest .' }
+                dir('services/admin-server') { bat 'docker build -t smarthealth/admin-server:latest .' }
+                dir('services/api-gateway') { bat 'docker build -t smarthealth/api-gateway:latest .' }
+                dir('services/auth-service') { bat 'docker build -t smarthealth/auth-service:latest .' }
+                dir('services/user-profile-service') { bat 'docker build -t smarthealth/user-profile-service:latest .' }
+                dir('services/health-data-service') { bat 'docker build -t smarthealth/health-data-service:latest .' }
+                dir('services/prediction-service') { bat 'docker build -t smarthealth/prediction-service:latest .' }
+                dir('services/go-service') { bat 'docker build -t smarthealth/go-service:latest .' }
             }
         }
     }

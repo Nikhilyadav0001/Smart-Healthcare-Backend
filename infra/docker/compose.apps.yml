@@ -1,0 +1,209 @@
+name: smart-healthcare
+
+services:
+  config-server:
+    build:
+      context: ../../services/config-server
+      dockerfile: Dockerfile
+    image: smarthealth/config-server:latest
+    container_name: config-server
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      CONFIG_GIT_TOKEN: ${CONFIG_GIT_TOKEN}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  discovery-server:
+    build:
+      context: ../../services/discovery-server
+      dockerfile: Dockerfile
+    image: smarthealth/discovery-server:latest
+    container_name: discovery-server
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+    depends_on:
+      - config-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  admin-server:
+    build:
+      context: ../../services/admin-server
+      dockerfile: Dockerfile
+    image: smarthealth/admin-server:latest
+    container_name: admin-server
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+    depends_on:
+      - config-server
+      - discovery-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  api-gateway:
+    build:
+      context: ../../services/api-gateway
+      dockerfile: Dockerfile
+    image: smarthealth/api-gateway:latest
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      BFF_CLIENT_SECRET: ${BFF_CLIENT_SECRET}
+    depends_on:
+      - config-server
+      - discovery-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  auth-service:
+    build:
+      context: ../../services/auth-service
+      dockerfile: Dockerfile
+    image: smarthealth/auth-service:latest
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      AUTH_DB_HOST: db-postgres
+      AUTH_DB_PORT: 5432
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      SPRING_DATA_REDIS_HOST: db-redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - config-server
+      - discovery-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  user-profile-service:
+    build:
+      context: ../../services/user-profile-service
+      dockerfile: Dockerfile
+    image: smarthealth/user-profile-service:latest
+    container_name: user-profile-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+      - "9082:9082"
+    environment:
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      PROFILE_DB_HOST: db-mariadb
+      PROFILE_DB_PORT: 3306
+      PROFILE_DB_PASSWORD: ${PROFILE_DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: db-redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - config-server
+      - discovery-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  health-data-service:
+    build:
+      context: ../../services/health-data-service
+      dockerfile: Dockerfile
+    image: smarthealth/health-data-service:latest
+    container_name: health-data-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+      - "9083:9083"
+    environment:
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      SPRING_DATA_MONGODB_URI: "mongodb://db-mongo:27017/health_data_db?replicaSet=rs0"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - config-server
+      - discovery-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  prediction-service:
+    build:
+      context: ../../services/prediction-service
+      dockerfile: Dockerfile
+    image: smarthealth/prediction-service:latest
+    container_name: prediction-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+      PREDICTION_DB_HOST: db-postgres
+      PREDICTION_DB_PORT: 5432
+      PREDICTION_DB_PASSWORD: ${PREDICTION_DB_PASSWORD}
+    depends_on:
+      - config-server
+      - discovery-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  go-service:
+    build:
+      context: ../../services/go-service
+      dockerfile: Dockerfile
+    image: smarthealth/go-service:latest
+    container_name: go-service
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+      - "9095:9095"
+    environment:
+      ENV: production
+      HTTP_PORT: "8086"
+      GRPC_PORT: "9095"
+      KAFKA_BROKERS: kafka:9092
+      REDIS_HOST: db-redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SMTP_HOST: tool-mailpit
+      SMTP_PORT: "1025"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy:4318"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  default:
+    name: smart-healthcare_default

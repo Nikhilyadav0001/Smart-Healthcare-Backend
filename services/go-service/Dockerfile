@@ -31,10 +31,10 @@ COPY --from=builder /src/templates /app/templates
 
 USER smarthealth:smarthealth
 
-EXPOSE 8085 9095
+EXPOSE 8086 9095
 
 ENV ENV=production \
-    HTTP_PORT=8085 \
+    HTTP_PORT=8086 \
     GRPC_PORT=9095 \
     TEMPLATES_DIR=/app/templates
 
