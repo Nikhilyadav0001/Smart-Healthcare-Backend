@@ -6,8 +6,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(properties = {
     "spring.cloud.config.enabled=false",
     "spring.config.import=",
-    "eureka.client.enabled=false",
-    "spring.cloud.discovery.enabled=false"
+    "eureka.client.register-with-eureka=false",
+    "eureka.client.fetch-registry=false"
 })
 class DiscoveryServerApplicationTests {
 
