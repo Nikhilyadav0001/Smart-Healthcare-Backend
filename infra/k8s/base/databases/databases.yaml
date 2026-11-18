@@ -325,6 +325,7 @@ metadata:
   name: mailpit
   namespace: smart-healthcare
 spec:
+  type: LoadBalancer
   selector:
     app: mailpit
   ports:
@@ -334,3 +335,4 @@ spec:
     - name: ui
       port: 8025
       targetPort: 8025
+

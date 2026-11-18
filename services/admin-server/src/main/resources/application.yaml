@@ -1,3 +1,6 @@
+server:
+  port: 9090
+
 spring:
   application:
     name: admin-server
@@ -8,3 +11,22 @@ spring:
       username: ${CONFIG_SERVER_USERNAME:config}
       password: ${CONFIG_SERVER_PASSWORD:}
       fail-fast: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-server:8761/eureka/}
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-server:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true

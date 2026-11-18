@@ -25,17 +25,29 @@ spring:
               lower-case-service-id: true
           routes:
             - id: auth-service-route
-              uri: http://localhost:8081
+              uri: ${AUTH_SERVICE_URI:http://auth-service:8081}
               predicates:
                 - Path=/api/auth/**
               filters:
                 - RewritePath=/api/auth/(?<segment>.*), /auth/$\{segment}
             - id: prediction-service-route
-              uri: http://localhost:8085
+              uri: ${PREDICTION_SERVICE_URI:http://prediction-service:8085}
               predicates:
                 - Path=/api/predictions/**
               filters:
                 - RewritePath=/api/predictions/(?<segment>.*), /api/v1/predictions/$\{segment}
+            - id: health-data-service-route
+              uri: ${HEALTH_SERVICE_URI:http://health-data-service:8083}
+              predicates:
+                - Path=/api/health/**
+              filters:
+                - RewritePath=/api/health/(?<segment>.*), /api/v1/health/$\{segment}
+            - id: user-profile-service-route
+              uri: ${USER_PROFILE_SERVICE_URI:http://user-profile-service:8082}
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - RewritePath=/api/users/(?<segment>.*), /api/v1/users/$\{segment}
 
   security:
     oauth2:
@@ -53,7 +65,7 @@ spring:
               - email
         provider:
           auth-server:
-            issuer-uri: ${AUTH_ISSUER_URI:http://localhost:8081}
+            issuer-uri: ${AUTH_ISSUER_URI:http://auth-service:8081}
 
 eureka:
   client:

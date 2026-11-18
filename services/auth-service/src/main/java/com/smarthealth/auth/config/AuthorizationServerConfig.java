@@ -360,10 +360,13 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:8081")
-                .build();
+    public AuthorizationServerSettings authorizationServerSettings(
+            @Value("${auth.server.issuer:}") String issuer) {
+        AuthorizationServerSettings.Builder builder = AuthorizationServerSettings.builder();
+        if (org.springframework.util.StringUtils.hasText(issuer)) {
+            builder.issuer(issuer);
+        }
+        return builder.build();
     }
 
     @Bean

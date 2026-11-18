@@ -1,3 +1,6 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: user-profile-service
@@ -30,6 +33,11 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-server:8761/eureka/}
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-server:8761/eureka/}
   instance:
     prefer-ip-address: true
 

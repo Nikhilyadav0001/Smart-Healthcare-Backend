@@ -31,6 +31,8 @@ public class SecurityConfig {
                         .pathMatchers(
                                 "/api/auth/**",
                                 "/api/predictions/**",
+                                "/api/health/**",
+                                "/api/users/**",
                                 "/dev/tokens",
                                 "/actuator/health",
                                 "/actuator/health/**",
