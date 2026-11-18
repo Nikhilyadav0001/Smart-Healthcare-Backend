@@ -1,0 +1,201 @@
+{
+  "info": {
+    "_postman_id": "smarthealth-e2e-collection-v1",
+    "name": "Smart Healthcare Platform - End-to-End Suite",
+    "description": "Comprehensive test suite covering Auth, Profile, Health Records, ML Predictions, and Go Report Service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8080" },
+    { "key": "adminUrl", "value": "http://127.0.0.1:9090" },
+    { "key": "eurekaUrl", "value": "http://127.0.0.1:8761" },
+    { "key": "goUrl", "value": "http://127.0.0.1:8086" },
+    { "key": "mailpitUrl", "value": "http://127.0.0.1:8025" },
+    { "key": "patientId", "value": "53ca9f82-1d10-4d0c-b6be-126092d7c169" },
+    { "key": "predictionId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Infrastructure",
+      "item": [
+        {
+          "name": "Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/actuator/health", "host": ["{{baseUrl}}"], "path": ["actuator", "health"] }
+          }
+        },
+        {
+          "name": "Eureka Registry",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{eurekaUrl}}/eureka/apps", "host": ["{{eurekaUrl}}"], "path": ["eureka", "apps"] }
+          }
+        },
+        {
+          "name": "Admin Server Instances",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{adminUrl}}/instances", "host": ["{{adminUrl}}"], "path": ["instances"] }
+          }
+        },
+        {
+          "name": "Go Microservice Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{goUrl}}/healthz", "host": ["{{goUrl}}"], "path": ["healthz"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "item": [
+        {
+          "name": "Register Patient Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('patientId', json.userId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient_{{$randomInt}}@smarthealth.local\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. User Profile",
+      "item": [
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Dev-User-Id", "value": "{{patientId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dr. Alex Mercer\",\n  \"dateOfBirth\": \"1985-06-12\",\n  \"gender\": \"MALE\",\n  \"phone\": \"+1-555-0144\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Dev-User-Id", "value": "{{patientId}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Health Data",
+      "item": [
+        {
+          "name": "Health Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/health/ping", "host": ["{{baseUrl}}"], "path": ["api", "health", "ping"] }
+          }
+        },
+        {
+          "name": "Create Health Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Dev-User-Id", "value": "{{patientId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"ageYears\": 45,\n  \"sex\": \"MALE\",\n  \"heightCm\": 175.5,\n  \"weightKg\": 82.0,\n  \"bmi\": 26.6,\n  \"systolicBp\": 135,\n  \"diastolicBp\": 85,\n  \"fastingGlucoseMgDl\": 110.0,\n  \"hba1cPercent\": 6.1,\n  \"totalCholesterolMgDl\": 210.0,\n  \"hdlMgDl\": 48.0,\n  \"ldlMgDl\": 130.0,\n  \"smokingStatus\": \"NEVER\",\n  \"activityLevel\": \"MODERATE\",\n  \"hasHypertension\": true,\n  \"hasHeartDisease\": false,\n  \"familyHistoryDiabetes\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/health/records", "host": ["{{baseUrl}}"], "path": ["api", "health", "records"] }
+          }
+        },
+        {
+          "name": "Get Latest Record",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health/records/latest?patientId={{patientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health", "records", "latest"],
+              "query": [{ "key": "patientId", "value": "{{patientId}}" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. ML Predictions & Reports",
+      "item": [
+        {
+          "name": "Get Models",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/predictions/models", "host": ["{{baseUrl}}"], "path": ["api", "predictions", "models"] }
+          }
+        },
+        {
+          "name": "Predict All Diseases",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('predictionId', json.prediction_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": \"{{patientId}}\",\n  \"patient_name\": \"Alex Mercer\",\n  \"patient_email\": \"patient@smarthealth.local\",\n  \"features\": {\n    \"age\": 45,\n    \"sex\": \"Male\",\n    \"height_cm\": 175.5,\n    \"weight_kg\": 82.0,\n    \"bmi\": 26.6,\n    \"systolic_bp\": 135.0,\n    \"diastolic_bp\": 85.0,\n    \"glucose_mg_dl\": 110.0,\n    \"cholesterol_mg_dl\": 210.0,\n    \"resting_heart_rate\": 74.0,\n    \"physical_activity\": \"Moderate\",\n    \"smoking\": 0,\n    \"family_history_diabetes\": 1,\n    \"family_history_heart_disease\": 0,\n    \"frequent_urination\": 1,\n    \"excessive_thirst\": 1\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/predictions/predict/all", "host": ["{{baseUrl}}"], "path": ["api", "predictions", "predict", "all"] }
+          }
+        },
+        {
+          "name": "Download PDF Report (Go gRPC)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/pdf" }],
+            "url": { "raw": "{{baseUrl}}/api/predictions/{{predictionId}}/report", "host": ["{{baseUrl}}"], "path": ["api", "predictions", "{{predictionId}}", "report"] }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -30,9 +30,11 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(
                                 "/api/auth/**",
+                                "/auth/**",
                                 "/api/predictions/**",
                                 "/api/health/**",
                                 "/api/users/**",
+                                "/profiles/**",
                                 "/dev/tokens",
                                 "/actuator/**"
                         ).permitAll()

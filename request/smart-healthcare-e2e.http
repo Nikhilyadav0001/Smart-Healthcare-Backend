@@ -1,0 +1,318 @@
+### ==============================================================================
+### SMART HEALTHCARE PLATFORM - END-TO-END HTTP REQUEST SUITE
+### Compatible with: IntelliJ IDEA HTTP Client, VS Code REST Client, & JetBrains IDEs
+### ==============================================================================
+
+@baseUrl = http://127.0.0.1:8080
+@authUrl = http://127.0.0.1:8081
+@profileUrl = http://127.0.0.1:8082
+@healthUrl = http://127.0.0.1:8083
+@predictionUrl = http://127.0.0.1:8085
+@goUrl = http://127.0.0.1:8086
+@discoveryUrl = http://127.0.0.1:8761
+@configUrl = http://127.0.0.1:8888
+@adminUrl = http://127.0.0.1:9090
+@mailpitUrl = http://127.0.0.1:8025
+
+# Shared Test Variables
+@testUserId = 53ca9f82-1d10-4d0c-b6be-126092d7c169
+@testEmail = patient.e2e@smarthealth.local
+@doctorId = doctor-wilson-42
+
+
+### ==============================================================================
+### 1. SYSTEM HEALTH & DISCOVERY INFRASTRUCTURE
+### ==============================================================================
+
+### 1.1 API Gateway Actuator Health Check
+GET {{baseUrl}}/actuator/health
+Accept: application/json
+
+> {%
+    client.test("Gateway health is UP", function() {
+        client.assert(response.status === 200, "Status should be 200");
+        client.assert(response.body.status === "UP", "Status should be UP");
+    });
+%}
+
+### 1.2 Eureka Discovery Server - Registered Applications
+GET {{discoveryUrl}}/eureka/apps
+Accept: application/json
+
+> {%
+    client.test("Eureka registry returns apps list", function() {
+        client.assert(response.status === 200, "Status should be 200");
+    });
+%}
+
+### 1.3 Spring Boot Admin Server - Managed Service Instances
+GET {{adminUrl}}/instances
+Accept: application/json
+
+> {%
+    client.test("Admin Server lists instances", function() {
+        client.assert(response.status === 200, "Status should be 200");
+    });
+%}
+
+### 1.4 Config Server - Actuator Health
+GET {{configUrl}}/actuator/health
+Accept: application/json
+
+### 1.5 Mailpit Inbox - Verify Email Notifications
+GET {{mailpitUrl}}/api/v1/messages
+Accept: application/json
+
+
+### ==============================================================================
+### 2. AUTHENTICATION & ONBOARDING FLOW
+### ==============================================================================
+
+### 2.1 Register New Patient Account
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "Password123!"
+}
+
+> {%
+    client.test("Registration creates user or returns conflict if exists", function() {
+        client.assert(response.status === 201 || response.status === 409, "Status should be 201 Created or 409 Conflict");
+        if (response.status === 201) {
+            client.global.set("registeredUserId", response.body.userId);
+        }
+    });
+%}
+
+### 2.2 Auth Service Direct Ping
+GET {{authUrl}}/auth/ping
+Accept: application/json
+
+
+### ==============================================================================
+### 3. USER PROFILE MANAGEMENT
+### ==============================================================================
+
+### 3.1 Upsert / Update Patient Profile Demographics
+PUT {{baseUrl}}/api/users/me
+Content-Type: application/json
+X-Dev-User-Id: {{testUserId}}
+
+{
+  "fullName": "Johnathan Doe",
+  "dateOfBirth": "1980-05-15",
+  "gender": "MALE",
+  "phone": "+1-555-0199"
+}
+
+> {%
+    client.test("Profile updated successfully", function() {
+        client.assert(response.status === 200, "Status should be 200");
+        client.assert(response.body.fullName === "Johnathan Doe", "Name matches");
+    });
+%}
+
+### 3.2 Retrieve Current Patient Profile
+GET {{baseUrl}}/api/users/me
+Accept: application/json
+X-Dev-User-Id: {{testUserId}}
+
+> {%
+    client.test("Profile fetched successfully", function() {
+        client.assert(response.status === 200, "Status should be 200");
+        client.assert(response.body.userId === "53ca9f82-1d10-4d0c-b6be-126092d7c169", "User ID matches");
+    });
+%}
+
+
+### ==============================================================================
+### 4. CLINICAL HEALTH DATA & VITALS (MongoDB RS0)
+### ==============================================================================
+
+### 4.1 Ping Health Data Service
+GET {{baseUrl}}/api/health/ping
+Accept: application/json
+
+> {%
+    client.test("Health Data Service is UP", function() {
+        client.assert(response.status === 200, "Status should be 200");
+        client.assert(response.body.datastore === "MongoDB rs0", "MongoDB active");
+    });
+%}
+
+### 4.2 Record Longitudinal Clinical Vitals & Lab Measurements
+POST {{baseUrl}}/api/health/records
+Content-Type: application/json
+X-Dev-User-Id: {{testUserId}}
+
+{
+  "patientId": "{{testUserId}}",
+  "ageYears": 48,
+  "sex": "MALE",
+  "heightCm": 178.0,
+  "weightKg": 84.5,
+  "bmi": 26.67,
+  "systolicBp": 138,
+  "diastolicBp": 86,
+  "fastingGlucoseMgDl": 115.0,
+  "hba1cPercent": 6.2,
+  "totalCholesterolMgDl": 215.0,
+  "hdlMgDl": 46.0,
+  "ldlMgDl": 138.0,
+  "smokingStatus": "NEVER",
+  "activityLevel": "MODERATE",
+  "hasHypertension": true,
+  "hasHeartDisease": false,
+  "familyHistoryDiabetes": true
+}
+
+> {%
+    client.test("Health record created in MongoDB", function() {
+        client.assert(response.status === 201, "Status should be 201");
+        client.global.set("healthRecordId", response.body.id);
+    });
+%}
+
+### 4.3 Get Latest Health Record for Patient
+GET {{baseUrl}}/api/health/records/latest?patientId={{testUserId}}
+Accept: application/json
+
+> {%
+    client.test("Latest record retrieved", function() {
+        client.assert(response.status === 200, "Status should be 200");
+        client.assert(response.body.patientId === "53ca9f82-1d10-4d0c-b6be-126092d7c169", "Patient ID matches");
+    });
+%}
+
+### 4.4 Get All Historical Records for Patient
+GET {{baseUrl}}/api/health/records?patientId={{testUserId}}
+Accept: application/json
+
+> {%
+    client.test("Records history retrieved", function() {
+        client.assert(response.status === 200, "Status should be 200");
+    });
+%}
+
+### 4.5 Doctor Access to Patient Clinical Records (HIPAA Audit Logged)
+GET {{baseUrl}}/api/health/patients/{{testUserId}}/records
+Accept: application/json
+X-Doctor-Id: {{doctorId}}
+
+> {%
+    client.test("Doctor access granted and logged", function() {
+        client.assert(response.status === 200, "Status should be 200");
+    });
+%}
+
+
+### ==============================================================================
+### 5. MACHINE LEARNING DECISION SUPPORT (Inference & Kafka Events)
+### ==============================================================================
+
+### 5.1 Discover Loaded ML Models & Decision Thresholds
+GET {{baseUrl}}/api/predictions/models
+Accept: application/json
+
+> {%
+    client.test("ML models info returned", function() {
+        client.assert(response.status === 200, "Status should be 200");
+        client.assert(response.body.status === "ready", "Models ready");
+    });
+%}
+
+### 5.2 Multi-Disease Risk Prediction (Pure-Java ML Engine)
+POST {{baseUrl}}/api/predictions/predict/all
+Content-Type: application/json
+
+{
+  "patient_id": "{{testUserId}}",
+  "patient_name": "Johnathan Doe",
+  "patient_email": "patient@smarthealth.local",
+  "features": {
+    "age": 48,
+    "sex": "Male",
+    "height_cm": 178.0,
+    "weight_kg": 84.5,
+    "bmi": 26.67,
+    "systolic_bp": 138.0,
+    "diastolic_bp": 86.0,
+    "glucose_mg_dl": 115.0,
+    "cholesterol_mg_dl": 215.0,
+    "resting_heart_rate": 74.0,
+    "physical_activity": "Moderate",
+    "smoking": 0,
+    "family_history_diabetes": 1,
+    "family_history_heart_disease": 0,
+    "frequent_urination": 1,
+    "excessive_thirst": 1,
+    "unexplained_weight_loss": 0,
+    "fatigue": 1,
+    "chest_pain": 0,
+    "shortness_of_breath": 0
+  }
+}
+
+> {%
+    client.test("Multi-disease prediction computed successfully", function() {
+        client.assert(response.status === 200, "Status should be 200");
+        client.assert(response.body.prediction_id !== undefined, "Prediction ID exists");
+        client.global.set("predictionId", response.body.prediction_id);
+    });
+%}
+
+### 5.3 Single Disease Prediction (Diabetes Model Only)
+POST {{baseUrl}}/api/predictions/predict
+Content-Type: application/json
+
+{
+  "model_type": "diabetes_risk",
+  "features": {
+    "age": 48,
+    "sex": "Male",
+    "bmi": 26.67,
+    "glucose_mg_dl": 115.0,
+    "systolic_bp": 138.0,
+    "family_history_diabetes": 1,
+    "frequent_urination": 1,
+    "excessive_thirst": 1
+  }
+}
+
+### 5.4 Download Official Clinical PDF Report (Go gRPC Service)
+# This request triggers gRPC call from prediction-service to go-service:9095
+GET {{baseUrl}}/api/predictions/{{predictionId}}/report
+Accept: application/pdf
+
+> {%
+    client.test("PDF report generated and returned", function() {
+        client.assert(response.status === 200, "Status should be 200");
+    });
+%}
+
+### 5.5 Get Patient Assessment History
+GET {{baseUrl}}/api/predictions/history/{{testUserId}}
+Accept: application/json
+
+
+### ==============================================================================
+### 6. GO MICROSERVICE DIRECT VERIFICATION (Port 8086 & 9095)
+### ==============================================================================
+
+### 6.1 Go Service Kubernetes Liveness Probe
+GET {{goUrl}}/healthz
+Accept: application/json
+
+### 6.2 Go Service Kubernetes Readiness Probe (Redis Ping)
+GET {{goUrl}}/readyz
+Accept: application/json
+
+### 6.3 Go Service Spring Boot Admin Actuator Health
+GET {{goUrl}}/actuator/health
+Accept: application/vnd.spring-boot.actuator.v3+json
+
+### 6.4 Go Service Prometheus Metrics
+GET {{goUrl}}/metrics
+Accept: text/plain

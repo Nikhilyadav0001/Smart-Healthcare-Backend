@@ -343,10 +343,20 @@ spec:
                   key: AUTH_DB_PASSWORD
             - name: SPRING_DATA_REDIS_HOST
               value: "redis"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
             - name: REDIS_PORT
               value: "6379"
             - name: REDIS_HOST
               value: "redis"
+            - name: GO_GRPC_HOST
+              value: "go-service"
+            - name: GO_SERVICE_GRPC_HOST
+              value: "go-service"
+            - name: HEALTH_DATA_GRPC_HOST
+              value: "health-data-service"
+            - name: HEALTH_DATA_SERVICE_GRPC_HOST
+              value: "health-data-service"
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
             - name: SPRING_DATA_REDIS_PASSWORD
@@ -457,10 +467,20 @@ spec:
                 secretKeyRef:
                   name: smarthealth-secrets
                   key: PROFILE_DB_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
             - name: REDIS_PORT
               value: "6379"
             - name: REDIS_HOST
               value: "redis"
+            - name: GO_GRPC_HOST
+              value: "go-service"
+            - name: GO_SERVICE_GRPC_HOST
+              value: "go-service"
+            - name: HEALTH_DATA_GRPC_HOST
+              value: "health-data-service"
+            - name: HEALTH_DATA_SERVICE_GRPC_HOST
+              value: "health-data-service"
             - name: SPRING_DATA_REDIS_HOST
               value: "redis"
             - name: SPRING_DATA_REDIS_PORT
@@ -550,10 +570,20 @@ spec:
               value: "mongodb://mongodb:27017/health_data_db?replicaSet=rs0&directConnection=true"
             - name: SPRING_DATA_MONGODB_URI
               value: "mongodb://mongodb:27017/health_data_db"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
             - name: REDIS_PORT
               value: "6379"
             - name: REDIS_HOST
               value: "redis"
+            - name: GO_GRPC_HOST
+              value: "go-service"
+            - name: GO_SERVICE_GRPC_HOST
+              value: "go-service"
+            - name: HEALTH_DATA_GRPC_HOST
+              value: "health-data-service"
+            - name: HEALTH_DATA_SERVICE_GRPC_HOST
+              value: "health-data-service"
             - name: SPRING_DATA_REDIS_HOST
               value: "redis"
             - name: SPRING_DATA_REDIS_PORT
@@ -647,10 +677,20 @@ spec:
                 secretKeyRef:
                   name: smarthealth-secrets
                   key: PREDICTION_DB_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
             - name: REDIS_PORT
               value: "6379"
             - name: REDIS_HOST
               value: "redis"
+            - name: GO_GRPC_HOST
+              value: "go-service"
+            - name: GO_SERVICE_GRPC_HOST
+              value: "go-service"
+            - name: HEALTH_DATA_GRPC_HOST
+              value: "health-data-service"
+            - name: HEALTH_DATA_SERVICE_GRPC_HOST
+              value: "health-data-service"
             - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
@@ -764,4 +804,6 @@ spec:
     - name: grpc
       port: 9095
       targetPort: 9095
+
+
 

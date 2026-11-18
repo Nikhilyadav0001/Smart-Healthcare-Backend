@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/profiles")
+@RequestMapping({"/profiles", "/api/v1/users"})
 public class ProfileController {
     private final ProfileService service;
 

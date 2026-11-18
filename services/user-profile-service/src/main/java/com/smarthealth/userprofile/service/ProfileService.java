@@ -31,7 +31,8 @@ public class ProfileService {
     @CachePut(cacheNames = "profiles", key = "#userId")
     @Transactional
     public ProfileResponse update(String userId, UpdateProfileRequest req) {
-        ProfileEntity e = repo.findById(userId).orElseThrow(() -> new ProfileNotFoundException(userId));
+        ProfileEntity e = repo.findById(userId)
+                .orElseGet(() -> new ProfileEntity(userId, "patient-" + userId + "@smarthealth.local"));
         e.setFullName(req.fullName());
         e.setDateOfBirth(req.dateOfBirth());
         e.setGender(req.gender());
