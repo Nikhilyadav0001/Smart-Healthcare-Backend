@@ -72,11 +72,11 @@ pipeline {
         stage('6. Deploy to Kubernetes (CD)') {
             steps {
                 echo 'Deploying application manifests to Kubernetes (smart-healthcare namespace)...'
-                bat 'kubectl apply -k infra/k8s/base'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config apply -k infra/k8s/base'
                 echo 'Verifying rollout status of critical microservices...'
-                bat 'kubectl rollout status deployment/postgres -n smart-healthcare --timeout=120s'
-                bat 'kubectl rollout status deployment/kafka -n smart-healthcare --timeout=120s'
-                bat 'kubectl rollout status deployment/api-gateway -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/postgres -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/kafka -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/api-gateway -n smart-healthcare --timeout=120s'
             }
         }
     }
