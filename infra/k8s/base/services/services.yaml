@@ -202,6 +202,8 @@ spec:
                   key: CONFIG_SERVER_PASSWORD
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: "http://discovery-server:8761/eureka/"
+            - name: AUTH_ISSUER_URI
+              value: "http://auth-service:8081"
             - name: BFF_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -442,6 +444,8 @@ spec:
                   key: CONFIG_SERVER_PASSWORD
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: "http://discovery-server:8761/eureka/"
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/health_data_db?replicaSet=rs0&directConnection=true"
             - name: SPRING_DATA_MONGODB_URI
               value: "mongodb://mongodb:27017/health_data_db"
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS

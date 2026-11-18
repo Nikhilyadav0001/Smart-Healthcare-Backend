@@ -53,7 +53,7 @@ spring:
               - email
         provider:
           auth-server:
-            issuer-uri: http://localhost:8081
+            issuer-uri: ${AUTH_ISSUER_URI:http://localhost:8081}
 
 eureka:
   client:

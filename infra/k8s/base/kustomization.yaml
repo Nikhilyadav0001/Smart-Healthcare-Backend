@@ -6,5 +6,6 @@ namespace: smart-healthcare
 resources:
   - namespace.yaml
   - configmap.yaml
+  - databases/postgres-init-configmap.yaml
   - databases/databases.yaml
   - services/services.yaml

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+  namespace: smart-healthcare
+data:
+  01-create-databases.sh: |
+    #!/bin/bash
+    set -e
+
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'auth_user') THEN
+          CREATE USER auth_user WITH PASSWORD '${AUTH_DB_PASSWORD}';
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'prediction_user') THEN
+          CREATE USER prediction_user WITH PASSWORD '${PREDICTION_DB_PASSWORD}';
+        END IF;
+      END
+      \$\$;
+
+      SELECT 'CREATE DATABASE auth_db OWNER auth_user'
+      WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'auth_db')\gexec
+
+      SELECT 'CREATE DATABASE prediction_db OWNER prediction_user'
+      WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'prediction_db')\gexec
+
+      REVOKE CONNECT ON DATABASE auth_db FROM PUBLIC;
+      REVOKE CONNECT ON DATABASE prediction_db FROM PUBLIC;
+    EOSQL
