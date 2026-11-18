@@ -25,9 +25,53 @@ import (
 	"github.com/smarthealth/go-service/internal/grpcserver"
 	"github.com/smarthealth/go-service/internal/mailer"
 	"github.com/smarthealth/go-service/internal/observability"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 )
+
+type statusResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (w *statusResponseWriter) WriteHeader(code int) {
+	w.statusCode = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+func tracingAndMetricsHandler(next http.Handler) http.Handler {
+	tracer := otel.Tracer("go-service/http")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract incoming W3C trace context from HTTP headers
+		ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+		ctx, span := tracer.Start(ctx, fmt.Sprintf("HTTP %s %s", r.Method, r.URL.Path),
+			trace.WithAttributes(
+				attribute.String("http.method", r.Method),
+				attribute.String("http.url", r.URL.Path),
+			),
+		)
+		defer span.End()
+
+		sw := &statusResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(sw, r.WithContext(ctx))
+
+		statusStr := strconv.Itoa(sw.statusCode)
+		outcome := "SUCCESS"
+		if sw.statusCode >= 400 && sw.statusCode < 500 {
+			outcome = "CLIENT_ERROR"
+		} else if sw.statusCode >= 500 {
+			outcome = "SERVER_ERROR"
+		}
+
+		span.SetAttributes(attribute.Int("http.status_code", sw.statusCode))
+		observability.HttpServerRequestsTotal.WithLabelValues(r.Method, statusStr, r.URL.Path, "None", outcome).Inc()
+	})
+}
 
 func findTemplatesDir() string {
 	candidates := []string{
@@ -112,14 +156,36 @@ func main() {
 		defer eventConsumer.Stop()
 	}
 
-	// 5. gRPC Server (port 9095)
+	// 5. gRPC Server (port 9095) with distributed tracing interceptor
 	grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GRPCPort))
 	if err != nil {
 		slog.Error("Failed to listen for gRPC", "port", cfg.GRPCPort, "error", err)
 		os.Exit(1)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+			md, ok := metadata.FromIncomingContext(ctx)
+			if ok {
+				carrier := propagation.HeaderCarrier{}
+				for k, v := range md {
+					if len(v) > 0 {
+						carrier.Set(k, v[0])
+					}
+				}
+				ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+			}
+			tracer := otel.Tracer("go-service/grpc")
+			ctx, span := tracer.Start(ctx, fmt.Sprintf("gRPC %s", info.FullMethod),
+				trace.WithAttributes(
+					attribute.String("rpc.system", "grpc"),
+					attribute.String("rpc.method", info.FullMethod),
+				),
+			)
+			defer span.End()
+			return handler(ctx, req)
+		}),
+	)
 	reportv1.RegisterReportServiceServer(grpcServer, grpcserver.NewReportServer())
 	reflection.Register(grpcServer)
 
@@ -328,9 +394,12 @@ func main() {
 		}()
 	})
 
+	// Wrap httpMux with tracing & request metrics middleware
+	rootHandler := tracingAndMetricsHandler(httpMux)
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.HTTPPort),
-		Handler:      httpMux,
+		Handler:      rootHandler,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}

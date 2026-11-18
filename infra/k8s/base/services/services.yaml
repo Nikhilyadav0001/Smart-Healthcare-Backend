@@ -39,6 +39,14 @@ spec:
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
               value: "true"
+            - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/traces"
+            - name: MANAGEMENT_OTLP_LOGGING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/logs"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: "false"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
           resources:
             requests:
               cpu: 100m
@@ -104,6 +112,14 @@ spec:
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
               value: "true"
+            - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/traces"
+            - name: MANAGEMENT_OTLP_LOGGING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/logs"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: "false"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
           resources:
             requests:
               cpu: 100m
@@ -167,6 +183,14 @@ spec:
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
               value: "true"
+            - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/traces"
+            - name: MANAGEMENT_OTLP_LOGGING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/logs"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: "false"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
           resources:
             requests:
               cpu: 100m
@@ -227,7 +251,13 @@ spec:
             - name: SERVER_PORT
               value: "8080"
             - name: AUTH_ISSUER_URI
-              value: "http://auth-service:8081"
+              value: ""
+            - name: AUTH_AUTHORIZATION_URI
+              value: "http://localhost:8081/oauth2/authorize"
+            - name: AUTH_TOKEN_URI
+              value: "http://auth-service:8081/oauth2/token"
+            - name: AUTH_JWK_SET_URI
+              value: "http://auth-service:8081/oauth2/jwks"
             - name: BFF_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -237,6 +267,14 @@ spec:
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
               value: "true"
+            - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/traces"
+            - name: MANAGEMENT_OTLP_LOGGING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/logs"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: "false"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
           resources:
             requests:
               cpu: 100m
@@ -338,10 +376,20 @@ spec:
                 secretKeyRef:
                   name: smarthealth-secrets
                   key: GITHUB_CLIENT_SECRET
+            - name: AUTH_SERVER_ISSUER
+              value: "http://localhost:8081"
             - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
               value: "true"
+            - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/traces"
+            - name: MANAGEMENT_OTLP_LOGGING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/logs"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: "false"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
           resources:
             requests:
               cpu: 100m
@@ -428,6 +476,14 @@ spec:
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
               value: "true"
+            - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/traces"
+            - name: MANAGEMENT_OTLP_LOGGING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/logs"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: "false"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
           resources:
             requests:
               cpu: 100m
@@ -513,6 +569,14 @@ spec:
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
               value: "true"
+            - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/traces"
+            - name: MANAGEMENT_OTLP_LOGGING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/logs"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: "false"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
           resources:
             requests:
               cpu: 100m
@@ -591,6 +655,14 @@ spec:
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
               value: "true"
+            - name: MANAGEMENT_OTLP_TRACING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/traces"
+            - name: MANAGEMENT_OTLP_LOGGING_ENDPOINT
+              value: "http://host.docker.internal:4318/v1/logs"
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
+              value: "false"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
           resources:
             requests:
               cpu: 100m

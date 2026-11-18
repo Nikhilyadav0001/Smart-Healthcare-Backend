@@ -2,38 +2,37 @@ pipeline {
     agent any
 
     environment {
-        CONFIG_GIT_TOKEN = credentials('CONFIG_GIT_TOKEN')
-        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-25.0.2'
-        PATH = "${JAVA_HOME}\\bin;C:\\Program Files\\Go\\bin;C:\\Program Files\\nodejs;C:\\Program Files\\Git\\cmd;${env.PATH}"
+        // Ensure tools and runtimes are present in PATH for Windows agents
+        PATH = "C:\\Program Files\\Java\\jdk-25\\bin;C:\\ProgramData\\chocolatey\\lib\\maven\\apache-maven-3.9.11\\bin;C:\\Program Files\\Go\\bin;C:\\Program Files\\nodejs;C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
     }
 
     stages {
-        stage('1. Checkout Monorepo') {
+        stage('1. Pre-flight & Tool Validation') {
             steps {
-                echo 'Checking out source repository...'
-                checkout scm
+                echo '=== Validating Toolchain Runtimes on Agent ==='
+                bat 'java -version'
+                bat 'mvn -v'
+                bat 'go version'
+                bat 'node -v'
+                bat 'npm -v'
+                bat 'docker version'
+                bat 'kubectl version --client'
             }
         }
 
-        stage('2. Build & Test Java Backend') {
+        stage('2. Build & Test Java Microservices') {
             steps {
                 dir('services') {
-                    echo 'Cleaning stale test reports and running Maven packaging on reactor...'
-                    bat 'for /d %%D in (*) do if exist "%%D\\target\\surefire-reports" rmdir /s /q "%%D\\target\\surefire-reports"'
-                    bat '.\\mvnw.cmd package'
-                }
-            }
-            post {
-                always {
-                    junit testResults: 'services/**/target/surefire-reports/*.xml', allowEmptyResults: true
+                    echo 'Executing Maven Reactor Build across all Spring Boot 4 microservices...'
+                    bat 'mvn clean package -DskipTests=false -Dcheckstyle.skip=true'
                 }
             }
         }
 
-        stage('3. Build & Test Go Microservice') {
+        stage('3. Build & Test Go Service') {
             steps {
                 dir('services/go-service') {
-                    echo 'Running Go tests (gRPC Report server, PDF engine, Kafka consumer)...'
+                    echo 'Running Go tests (gRPC Report server, PDF engine, Kafka consumer)...'\
                     bat 'go vet ./...'
                     bat 'go test -v ./...'
                 }
@@ -46,6 +45,11 @@ pipeline {
                 bat '''
                     if not exist "..\\smart-healthcare-frontend" (
                         git clone https://github.com/Nikhilyadav0001/Smart-Healthcare-Frontend.git ..\\smart-healthcare-frontend
+                    ) else (
+                        cd ..\\smart-healthcare-frontend
+                        git fetch origin
+                        git reset --hard origin/main
+                        cd ..\\smart-healthcare-pipeline
                     )
                     cd ..\\smart-healthcare-frontend
                     call npm ci

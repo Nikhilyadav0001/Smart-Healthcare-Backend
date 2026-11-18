@@ -6,6 +6,14 @@ import (
 )
 
 var (
+	HttpServerRequestsTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_server_requests_seconds_count",
+			Help: "Total number of HTTP server requests",
+		},
+		[]string{"method", "status", "uri", "exception", "outcome"},
+	)
+
 	ReportsGeneratedTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "reports_generated_total",
@@ -56,3 +64,8 @@ var (
 		[]string{"topic"},
 	)
 )
+
+func init() {
+	HttpServerRequestsTotal.WithLabelValues("GET", "200", "/healthz", "None", "SUCCESS").Add(0)
+	HttpServerRequestsTotal.WithLabelValues("GET", "200", "/readyz", "None", "SUCCESS").Add(0)
+}
