@@ -23,7 +23,7 @@ pipeline {
                         copy /Y "%SECRETS_FILE%" services\\.env
                     '''
                     dir('services') {
-                        bat '.\\mvnw.cmd test'
+                        bat '.\\mvnw.cmd package'
                     }
                 }
             }

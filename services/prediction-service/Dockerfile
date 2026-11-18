@@ -1,18 +1,13 @@
-FROM python:3.12-slim
+FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN addgroup -S smarthealth && adduser -S smarthealth -G smarthealth
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY target/prediction-service-*.jar /app/prediction-service.jar
 
-COPY . .
+USER smarthealth:smarthealth
 
 EXPOSE 8085
 
-CMD ["python", "run.py"]
+ENTRYPOINT ["java", "-jar", "/app/prediction-service.jar"]
