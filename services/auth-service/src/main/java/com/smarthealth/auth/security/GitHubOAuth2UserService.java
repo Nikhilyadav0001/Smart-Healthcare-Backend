@@ -1,5 +1,6 @@
 package com.smarthealth.auth.security;
 
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@SuppressWarnings("unchecked")
 public class GitHubOAuth2UserService
         implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
@@ -74,7 +76,7 @@ public class GitHubOAuth2UserService
                         .headers(headers ->
                                 headers.setBearerAuth(accessToken))
                         .retrieve()
-                        .body(List.class);
+                        .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
 
         if (emails == null) {
             return null;

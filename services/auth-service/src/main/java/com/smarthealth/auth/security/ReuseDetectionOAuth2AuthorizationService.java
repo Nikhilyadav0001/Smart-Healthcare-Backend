@@ -24,6 +24,7 @@ import java.util.UUID;
  * When a previously rotated refresh token is presented again,
  * the entire token family (the authorization row) is immediately revoked.
  */
+@SuppressWarnings("deprecation")
 public class ReuseDetectionOAuth2AuthorizationService implements OAuth2AuthorizationService {
 
     private static final Logger log = LoggerFactory.getLogger(ReuseDetectionOAuth2AuthorizationService.class);

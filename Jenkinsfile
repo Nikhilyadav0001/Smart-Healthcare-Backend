@@ -21,6 +21,7 @@ pipeline {
                     bat '''
                         copy /Y "%SECRETS_FILE%" .env
                         copy /Y "%SECRETS_FILE%" services\\.env
+                        for /d %%D in (services\\*) do if exist "%%D\\target\\surefire-reports" rmdir /s /q "%%D\\target\\surefire-reports"
                     '''
                     dir('services') {
                         bat '.\\mvnw.cmd package'

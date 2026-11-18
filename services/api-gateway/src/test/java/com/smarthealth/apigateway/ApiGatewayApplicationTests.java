@@ -7,7 +7,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(properties = {
     "spring.cloud.config.enabled=false",
-    "spring.config.import="
+    "spring.config.import=",
+    "eureka.client.register-with-eureka=false",
+    "eureka.client.fetch-registry=false"
 })
 class ApiGatewayApplicationTests {
 

@@ -52,4 +52,19 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>flyway-community-db-support</id>
+            <url>https://maven.pkg.github.com/flyway/flyway-community-db-support</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        <repository>
+            <id>MavenFeed</id>
+            <url>https://red-gate.pkgs.visualstudio.com/MavenFeed/_packaging/MavenFeed/maven/v1/</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
 </project>

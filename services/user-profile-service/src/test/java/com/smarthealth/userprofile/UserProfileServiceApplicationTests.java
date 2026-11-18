@@ -12,10 +12,10 @@ import com.smarthealth.userprofile.kafka.OutboxPublisher;
     "spring.config.import=",
     "spring.flyway.enabled=false",
     "spring.jpa.hibernate.ddl-auto=none",
-    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MariaDBDialect",
+    "spring.jpa.database-platform=org.hibernate.dialect.MariaDBDialect",
     "spring.jpa.properties.hibernate.boot.allow_jdbc_metadata_access=false",
-    "eureka.client.enabled=false",
-    "spring.cloud.discovery.enabled=false"
+    "eureka.client.register-with-eureka=false",
+    "eureka.client.fetch-registry=false"
 })
 class UserProfileServiceApplicationTests {
 
