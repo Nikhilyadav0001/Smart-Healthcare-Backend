@@ -237,22 +237,25 @@ func main() {
 	httpMux.Handle("/metrics", promhttp.Handler())
 
 	// Spring Boot Actuator Endpoints for Spring Boot Admin
-	httpMux.HandleFunc("/actuator", func(w http.ResponseWriter, r *http.Request) {
+	actuatorHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.spring-boot.actuator.v3+json;charset=UTF-8")
+		base := fmt.Sprintf("http://%s:%s/actuator", cfg.InstanceHost, cfg.HTTPPort)
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"_links": map[string]any{
-				"self":                       map[string]any{"href": fmt.Sprintf("http://%s:%s/actuator", cfg.InstanceHost, cfg.HTTPPort), "templated": false},
-				"health":                     map[string]any{"href": fmt.Sprintf("http://%s:%s/actuator/health", cfg.InstanceHost, cfg.HTTPPort), "templated": false},
-				"health-path":                map[string]any{"href": fmt.Sprintf("http://%s:%s/actuator/health/{*path}", cfg.InstanceHost, cfg.HTTPPort), "templated": true},
-				"info":                       map[string]any{"href": fmt.Sprintf("http://%s:%s/actuator/info", cfg.InstanceHost, cfg.HTTPPort), "templated": false},
-				"metrics":                    map[string]any{"href": fmt.Sprintf("http://%s:%s/actuator/metrics", cfg.InstanceHost, cfg.HTTPPort), "templated": false},
-				"metrics-requiredMetricName": map[string]any{"href": fmt.Sprintf("http://%s:%s/actuator/metrics/{requiredMetricName}", cfg.InstanceHost, cfg.HTTPPort), "templated": true},
-				"shutdown":                   map[string]any{"href": fmt.Sprintf("http://%s:%s/actuator/shutdown", cfg.InstanceHost, cfg.HTTPPort), "templated": false},
+				"self":                       map[string]any{"href": base, "templated": false},
+				"health":                     map[string]any{"href": base + "/health", "templated": false},
+				"health-path":                map[string]any{"href": base + "/health/{*path}", "templated": true},
+				"info":                       map[string]any{"href": base + "/info", "templated": false},
+				"metrics":                    map[string]any{"href": base + "/metrics", "templated": false},
+				"metrics-requiredMetricName": map[string]any{"href": base + "/metrics/{requiredMetricName}", "templated": true},
+				"shutdown":                   map[string]any{"href": base + "/shutdown", "templated": false},
 			},
 		})
-	})
+	}
+	httpMux.HandleFunc("/actuator", actuatorHandler)
+	httpMux.HandleFunc("/actuator/", actuatorHandler)
 
-	httpMux.HandleFunc("/actuator/health", func(w http.ResponseWriter, r *http.Request) {
+	healthHandler := func(w http.ResponseWriter, r *http.Request) {
 		redisStatus := "UP"
 		if err := rdb.Ping(r.Context()).Err(); err != nil {
 			redisStatus = "DOWN"
@@ -280,9 +283,11 @@ func main() {
 				},
 			},
 		})
-	})
+	}
+	httpMux.HandleFunc("/actuator/health", healthHandler)
+	httpMux.HandleFunc("/actuator/health/", healthHandler)
 
-	httpMux.HandleFunc("/actuator/info", func(w http.ResponseWriter, r *http.Request) {
+	infoHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/vnd.spring-boot.actuator.v3+json;charset=UTF-8")
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"app": map[string]any{
@@ -292,10 +297,12 @@ func main() {
 				"runtime":     "go",
 			},
 		})
-	})
+	}
+	httpMux.HandleFunc("/actuator/info", infoHandler)
+	httpMux.HandleFunc("/actuator/info/", infoHandler)
 
-	httpMux.HandleFunc("/actuator/metrics", func(w http.ResponseWriter, r *http.Request) {
-		metricName := strings.TrimPrefix(r.URL.Path, "/actuator/metrics/")
+	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
+		metricName := strings.TrimPrefix(r.URL.Path, "/actuator/metrics")
 		metricName = strings.TrimPrefix(metricName, "/")
 		w.Header().Set("Content-Type", "application/vnd.spring-boot.actuator.v3+json;charset=UTF-8")
 
@@ -308,8 +315,16 @@ func main() {
 				"names": []string{
 					"jvm.memory.used",
 					"jvm.memory.max",
+					"jvm.memory.committed",
+					"jvm.threads.live",
+					"jvm.threads.peak",
+					"jvm.threads.daemon",
+					"jvm.gc.memory.allocated",
+					"jvm.gc.pause",
 					"process.uptime",
+					"process.start.time",
 					"process.cpu.usage",
+					"system.cpu.usage",
 					"system.cpu.count",
 				},
 			})
@@ -337,6 +352,58 @@ func main() {
 				},
 				"availableTags": []any{},
 			})
+		case "jvm.memory.committed":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name":        "jvm.memory.committed",
+				"description": "Committed memory in bytes",
+				"baseUnit":    "bytes",
+				"measurements": []map[string]any{
+					{"statistic": "VALUE", "value": m.Sys},
+				},
+				"availableTags": []any{},
+			})
+		case "jvm.threads.live", "jvm.threads.peak":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name":        metricName,
+				"description": "Live Goroutines count",
+				"baseUnit":    "threads",
+				"measurements": []map[string]any{
+					{"statistic": "VALUE", "value": runtime.NumGoroutine()},
+				},
+				"availableTags": []any{},
+			})
+		case "jvm.threads.daemon":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name":        "jvm.threads.daemon",
+				"description": "Daemon threads",
+				"baseUnit":    "threads",
+				"measurements": []map[string]any{
+					{"statistic": "VALUE", "value": 0},
+				},
+				"availableTags": []any{},
+			})
+		case "jvm.gc.memory.allocated":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name":        "jvm.gc.memory.allocated",
+				"description": "Total allocated memory",
+				"baseUnit":    "bytes",
+				"measurements": []map[string]any{
+					{"statistic": "VALUE", "value": m.TotalAlloc},
+				},
+				"availableTags": []any{},
+			})
+		case "jvm.gc.pause":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name":        "jvm.gc.pause",
+				"description": "GC pause duration",
+				"baseUnit":    "seconds",
+				"measurements": []map[string]any{
+					{"statistic": "COUNT", "value": m.NumGC},
+					{"statistic": "TOTAL_TIME", "value": float64(m.PauseTotalNs) / 1e9},
+					{"statistic": "MAX", "value": 0.001},
+				},
+				"availableTags": []any{},
+			})
 		case "process.uptime":
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name":        "process.uptime",
@@ -344,6 +411,16 @@ func main() {
 				"baseUnit":    "seconds",
 				"measurements": []map[string]any{
 					{"statistic": "VALUE", "value": uptimeSecs},
+				},
+				"availableTags": []any{},
+			})
+		case "process.start.time":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name":        "process.start.time",
+				"description": "Start time of the process in seconds since epoch",
+				"baseUnit":    "seconds",
+				"measurements": []map[string]any{
+					{"statistic": "VALUE", "value": float64(startTime.Unix())},
 				},
 				"availableTags": []any{},
 			})
@@ -360,10 +437,20 @@ func main() {
 		case "process.cpu.usage":
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name":        "process.cpu.usage",
-				"description": "Recent CPU usage",
+				"description": "Recent CPU usage for process",
 				"baseUnit":    nil,
 				"measurements": []map[string]any{
 					{"statistic": "VALUE", "value": 0.01},
+				},
+				"availableTags": []any{},
+			})
+		case "system.cpu.usage":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"name":        "system.cpu.usage",
+				"description": "Recent CPU usage for system",
+				"baseUnit":    nil,
+				"measurements": []map[string]any{
+					{"statistic": "VALUE", "value": 0.02},
 				},
 				"availableTags": []any{},
 			})
@@ -376,9 +463,11 @@ func main() {
 				"availableTags": []any{},
 			})
 		}
-	})
+	}
+	httpMux.HandleFunc("/actuator/metrics", metricsHandler)
+	httpMux.HandleFunc("/actuator/metrics/", metricsHandler)
 
-	httpMux.HandleFunc("/actuator/shutdown", func(w http.ResponseWriter, r *http.Request) {
+	shutdownHandler := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -392,7 +481,9 @@ func main() {
 			time.Sleep(500 * time.Millisecond)
 			stop()
 		}()
-	})
+	}
+	httpMux.HandleFunc("/actuator/shutdown", shutdownHandler)
+	httpMux.HandleFunc("/actuator/shutdown/", shutdownHandler)
 
 	// Wrap httpMux with tracing & request metrics middleware
 	rootHandler := tracingAndMetricsHandler(httpMux)
