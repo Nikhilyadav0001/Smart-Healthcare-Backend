@@ -32,7 +32,7 @@ pipeline {
         stage('3. Build & Test Go Service') {
             steps {
                 dir('services/go-service') {
-                    echo 'Running Go tests (gRPC Report server, PDF engine, Kafka consumer)...'\
+                    echo 'Running Go tests (gRPC Report server, PDF engine, Kafka consumer)...'
                     bat 'go vet ./...'
                     bat 'go test -v ./...'
                 }
@@ -97,7 +97,7 @@ pipeline {
         failure {
             echo '====================================================='
             echo '  Pipeline Failed! Inspect stage logs above.          '
-            echo '  ====================================================='
+            echo '====================================================='
         }
     }
 }
