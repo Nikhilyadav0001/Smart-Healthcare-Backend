@@ -9,3 +9,4 @@ resources:
   - databases/postgres-init-configmap.yaml
   - databases/databases.yaml
   - services/services.yaml
+  - services/frontend.yaml

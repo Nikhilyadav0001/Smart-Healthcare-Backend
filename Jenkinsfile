@@ -66,6 +66,7 @@ pipeline {
                 dir('services/health-data-service') { bat 'docker build -t smarthealth/health-data-service:latest .' }
                 dir('services/prediction-service') { bat 'docker build -t smarthealth/prediction-service:latest .' }
                 dir('services/go-service') { bat 'docker build -t smarthealth/go-service:latest .' }
+                bat 'docker build -t smarthealth/frontend:latest ..\\smart-healthcare-frontend'
             }
         }
 
@@ -77,6 +78,7 @@ pipeline {
                 bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/postgres -n smart-healthcare --timeout=120s'
                 bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/kafka -n smart-healthcare --timeout=120s'
                 bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/api-gateway -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/frontend -n smart-healthcare --timeout=120s'
             }
         }
     }
@@ -91,7 +93,7 @@ pipeline {
         failure {
             echo '====================================================='
             echo '  Pipeline Failed! Inspect stage logs above.          '
-            echo '====================================================='
+            echo '  ====================================================='
         }
     }
 }

@@ -35,6 +35,10 @@ spec:
                 secretKeyRef:
                   name: smarthealth-secrets
                   key: CONFIG_GIT_TOKEN
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 100m
@@ -96,6 +100,10 @@ spec:
                 secretKeyRef:
                   name: smarthealth-secrets
                   key: CONFIG_SERVER_PASSWORD
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 100m
@@ -153,22 +161,12 @@ spec:
                   key: CONFIG_SERVER_PASSWORD
             - name: SERVER_PORT
               value: "9090"
-            - name: SERVER_PORT
-              value: "8082"
-            - name: SERVER_PORT
-              value: "8083"
-            - name: SERVER_PORT
-              value: "8085"
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: "http://discovery-server:8761/eureka/"
-            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
-              value: "http://discovery-server:8761/eureka/"
-            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
-              value: "http://discovery-server:8761/eureka/"
-            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
-              value: "http://discovery-server:8761/eureka/"
-            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
-              value: "http://discovery-server:8761/eureka/"
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 100m
@@ -235,6 +233,10 @@ spec:
                 secretKeyRef:
                   name: smarthealth-secrets
                   key: BFF_CLIENT_SECRET
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 100m
@@ -336,6 +338,10 @@ spec:
                 secretKeyRef:
                   name: smarthealth-secrets
                   key: GITHUB_CLIENT_SECRET
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 100m
@@ -418,6 +424,10 @@ spec:
                   key: REDIS_PASSWORD
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 100m
@@ -499,6 +509,10 @@ spec:
                   key: REDIS_PASSWORD
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 100m
@@ -573,6 +587,10 @@ spec:
               value: "6379"
             - name: REDIS_HOST
               value: "redis"
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 100m
@@ -636,6 +654,20 @@ spec:
               value: "mailpit"
             - name: SMTP_PORT
               value: "1025"
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-server:8761/eureka/"
+            - name: INSTANCE_HOST
+              value: "go-service"
+            - name: REDIS_ADDR
+              value: "redis:6379"
+            - name: ALLOY_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+            - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 50m

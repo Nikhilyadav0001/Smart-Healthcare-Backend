@@ -49,8 +49,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: "*"
   endpoint:
+    shutdown:
+      enabled: true
     health:
       show-details: always
       probes:

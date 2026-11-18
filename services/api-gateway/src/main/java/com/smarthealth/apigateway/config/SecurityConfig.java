@@ -1,6 +1,5 @@
 package com.smarthealth.apigateway.config;
 
-import java.net.URI;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -10,16 +9,17 @@ import org.springframework.security.web.server.authentication.RedirectServerAuth
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 
+import java.net.URI;
+
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(
-            ServerHttpSecurity http) {
-
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        // Upon successful login with auth-server, redirect the browser to the Vite frontend
         RedirectServerAuthenticationSuccessHandler successHandler =
-                new RedirectServerAuthenticationSuccessHandler("http://localhost:5173/");
+                new RedirectServerAuthenticationSuccessHandler("http://localhost:5173/dashboard");
 
         RedirectServerLogoutSuccessHandler logoutSuccessHandler =
                 new RedirectServerLogoutSuccessHandler();
@@ -34,9 +34,7 @@ public class SecurityConfig {
                                 "/api/health/**",
                                 "/api/users/**",
                                 "/dev/tokens",
-                                "/actuator/health",
-                                "/actuator/health/**",
-                                "/actuator/prometheus"
+                                "/actuator/**"
                         ).permitAll()
                         .anyExchange().authenticated()
                 )

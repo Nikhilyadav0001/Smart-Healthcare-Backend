@@ -40,9 +40,19 @@ type Config struct {
 	OtelEndpoint string
 	ServiceName  string
 	LogLevel     string
+
+	// Eureka
+	EurekaURL    string
+	InstanceHost string
+	InstanceIP   string
 }
 
 func Load() *Config {
+	redisAddr := getEnv("REDIS_ADDR", "")
+	if redisAddr == "" {
+		redisAddr = getEnv("REDIS_HOST", "localhost:6379")
+	}
+
 	return &Config{
 		HTTPPort: getEnv("HTTP_PORT", "8086"),
 		GRPCPort: getEnv("GRPC_PORT", "9095"),
@@ -58,7 +68,7 @@ func Load() *Config {
 		MaxRetries:                 getEnvInt("MAX_RETRIES", 3),
 		RetryBackoff:               getEnvDuration("RETRY_BACKOFF", 500*time.Millisecond),
 
-		RedisAddr:      getEnv("REDIS_ADDR", "localhost:6379"),
+		RedisAddr:      redisAddr,
 		RedisPassword:  getEnv("REDIS_PASSWORD", "nikhil"),
 		RedisDB:        getEnvInt("REDIS_DB", 0),
 		IdempotencyTTL: getEnvDuration("IDEMPOTENCY_TTL", 24*time.Hour),
@@ -72,6 +82,10 @@ func Load() *Config {
 		OtelEndpoint: getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318"),
 		ServiceName:  getEnv("SERVICE_NAME", "go-service"),
 		LogLevel:     getEnv("LOG_LEVEL", "info"),
+
+		EurekaURL:    getEnv("EUREKA_CLIENT_SERVICEURL_DEFAULTZONE", getEnv("EUREKA_SERVER_URL", "http://discovery-server:8761/eureka/")),
+		InstanceHost: getEnv("INSTANCE_HOST", getEnv("HOSTNAME", "go-service")),
+		InstanceIP:   getEnv("INSTANCE_IP", ""),
 	}
 }
 
