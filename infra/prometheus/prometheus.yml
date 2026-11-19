@@ -49,7 +49,7 @@ scrape_configs:
     metrics_path: /actuator/prometheus
     basic_auth:
       username: config
-      password: nikhil
+      password: dev-config-pass
     static_configs:
       - targets: [ "host.docker.internal:8888" ]
         labels:
