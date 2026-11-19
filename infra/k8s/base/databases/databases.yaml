@@ -335,4 +335,3 @@ spec:
     - name: ui
       port: 8025
       targetPort: 8025
-
