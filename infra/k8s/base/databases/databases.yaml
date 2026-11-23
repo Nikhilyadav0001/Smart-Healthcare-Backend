@@ -38,6 +38,13 @@ spec:
                   key: PREDICTION_DB_PASSWORD
             - name: TZ
               value: "Asia/Kolkata"
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - "ln -sf Kolkata /usr/share/zoneinfo/Asia/Calcutta"
           volumeMounts:
             - name: init-scripts
               mountPath: /docker-entrypoint-initdb.d
@@ -347,3 +354,46 @@ spec:
     - name: ui
       port: 8025
       targetPort: 8025
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-external
+  namespace: smart-healthcare
+spec:
+  type: LoadBalancer
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5433
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-external
+  namespace: smart-healthcare
+spec:
+  type: LoadBalancer
+  selector:
+    app: mongodb
+  ports:
+    - name: mongodb
+      port: 27018
+      targetPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-external
+  namespace: smart-healthcare
+spec:
+  type: LoadBalancer
+  selector:
+    app: mariadb
+  ports:
+    - name: mariadb
+      port: 3308
+      targetPort: 3306
