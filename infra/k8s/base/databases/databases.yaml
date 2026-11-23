@@ -130,6 +130,8 @@ metadata:
   namespace: smart-healthcare
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mongodb
@@ -141,7 +143,17 @@ spec:
       containers:
         - name: mongodb
           image: mongo:7.0
-          command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+          command:
+            - /bin/bash
+            - -c
+            - |
+              mongod --replSet rs0 --bind_ip_all --port 27017 &
+              MONGOPID=$!
+              until mongosh --eval "db.adminCommand('ping')" --quiet >/dev/null 2>&1; do
+                sleep 1
+              done
+              mongosh --quiet --eval "try { if (!rs.status().ok) rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]}); } catch(e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]}); }"
+              wait $MONGOPID
           ports:
             - containerPort: 27017
           resources:
