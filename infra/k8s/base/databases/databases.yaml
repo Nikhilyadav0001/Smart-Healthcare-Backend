@@ -1,21 +1,35 @@
+# ==============================================================================
+# AUTH POSTGRESQL (Primary & Read-Replica)
+# ==============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres
+  name: postgres-auth
   namespace: smart-healthcare
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: postgres-auth
+      role: primary
   template:
     metadata:
       labels:
-        app: postgres
+        app: postgres-auth
+        role: primary
     spec:
       containers:
         - name: postgres
           image: postgres:16
+          args:
+            - -c
+            - wal_level=replica
+            - -c
+            - max_wal_senders=10
+            - -c
+            - max_replication_slots=10
+            - -c
+            - hot_standby=on
           ports:
             - containerPort: 5432
           env:
@@ -31,6 +45,149 @@ spec:
                 secretKeyRef:
                   name: smarthealth-secrets
                   key: AUTH_DB_PASSWORD
+            - name: TZ
+              value: "Asia/Kolkata"
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - "ln -sf Kolkata /usr/share/zoneinfo/Asia/Calcutta"
+          volumeMounts:
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: postgres-auth-init-script
+            defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-auth
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: postgres-auth
+    role: primary
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-auth-replica
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-auth
+      role: replica
+  template:
+    metadata:
+      labels:
+        app: postgres-auth
+        role: replica
+    spec:
+      containers:
+        - name: postgres-replica
+          image: postgres:16
+          command:
+            - /bin/bash
+            - -c
+            - |
+              ln -sf Kolkata /usr/share/zoneinfo/Asia/Calcutta
+              until pg_isready -h postgres-auth -p 5432 -U postgres; do sleep 2; done
+              if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+                rm -rf /var/lib/postgresql/data/*
+                PGPASSWORD="${REPLICATION_PASSWORD}" gosu postgres pg_basebackup -h postgres-auth -p 5432 -U replicator -D /var/lib/postgresql/data -Fp -Xs -R
+              fi
+              chmod 700 /var/lib/postgresql/data
+              exec gosu postgres postgres -D /var/lib/postgresql/data
+          ports:
+            - containerPort: 5432
+          env:
+            - name: REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: AUTH_DB_PASSWORD
+            - name: TZ
+              value: "Asia/Kolkata"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-auth-replica
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: postgres-auth
+    role: replica
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# ==============================================================================
+# PREDICTION POSTGRESQL (Primary & Read-Replica)
+# ==============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-prediction
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-prediction
+      role: primary
+  template:
+    metadata:
+      labels:
+        app: postgres-prediction
+        role: primary
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          args:
+            - -c
+            - wal_level=replica
+            - -c
+            - max_wal_senders=10
+            - -c
+            - max_replication_slots=10
+            - -c
+            - hot_standby=on
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: POSTGRES_PASSWORD
             - name: PREDICTION_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -50,29 +207,96 @@ spec:
               mountPath: /docker-entrypoint-initdb.d
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: 50m
+              memory: 128Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 250m
+              memory: 256Mi
       volumes:
         - name: init-scripts
           configMap:
-            name: postgres-init-script
+            name: postgres-prediction-init-script
             defaultMode: 0755
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: postgres-prediction
   namespace: smart-healthcare
 spec:
   selector:
-    app: postgres
+    app: postgres-prediction
+    role: primary
   ports:
     - port: 5432
       targetPort: 5432
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-prediction-replica
+  namespace: smart-healthcare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-prediction
+      role: replica
+  template:
+    metadata:
+      labels:
+        app: postgres-prediction
+        role: replica
+    spec:
+      containers:
+        - name: postgres-replica
+          image: postgres:16
+          command:
+            - /bin/bash
+            - -c
+            - |
+              ln -sf Kolkata /usr/share/zoneinfo/Asia/Calcutta
+              until pg_isready -h postgres-prediction -p 5432 -U postgres; do sleep 2; done
+              if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+                rm -rf /var/lib/postgresql/data/*
+                PGPASSWORD="${REPLICATION_PASSWORD}" gosu postgres pg_basebackup -h postgres-prediction -p 5432 -U replicator -D /var/lib/postgresql/data -Fp -Xs -R
+              fi
+              chmod 700 /var/lib/postgresql/data
+              exec gosu postgres postgres -D /var/lib/postgresql/data
+          ports:
+            - containerPort: 5432
+          env:
+            - name: REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: smarthealth-secrets
+                  key: PREDICTION_DB_PASSWORD
+            - name: TZ
+              value: "Asia/Kolkata"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-prediction-replica
+  namespace: smart-healthcare
+spec:
+  selector:
+    app: postgres-prediction
+    role: replica
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# ==============================================================================
+# MARIADB (Profile DB)
+# ==============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -130,15 +354,42 @@ spec:
     - port: 3306
       targetPort: 3306
 ---
-apiVersion: apps/v1
-kind: Deployment
+# ==============================================================================
+# MONGODB (3-Node Replica Set rs0 with Arbiter)
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-headless
+  namespace: smart-healthcare
+spec:
+  clusterIP: None
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: v1
+kind: Service
 metadata:
   name: mongodb
   namespace: smart-healthcare
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: smart-healthcare
+spec:
+  serviceName: mongodb-headless
+  replicas: 3
   selector:
     matchLabels:
       app: mongodb
@@ -156,33 +407,49 @@ spec:
             - |
               mongod --replSet rs0 --bind_ip_all --port 27017 &
               MONGOPID=$!
-              until mongosh --eval "db.adminCommand('ping')" --quiet >/dev/null 2>&1; do
-                sleep 1
-              done
-              mongosh --quiet --eval "try { if (!rs.status().ok) rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]}); } catch(e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]}); }"
+              if [[ "$HOSTNAME" == "mongodb-0" ]]; then
+                until mongosh --eval "db.adminCommand('ping')" --quiet >/dev/null 2>&1; do sleep 1; done
+                for host in mongodb-1.mongodb-headless mongodb-2.mongodb-headless; do
+                  until mongosh --host $host --eval "db.adminCommand('ping')" --quiet >/dev/null 2>&1; do sleep 1; done
+                done
+                mongosh --quiet --eval "
+                  try {
+                    if (!rs.status().ok) {
+                      rs.initiate({
+                        _id: 'rs0',
+                        members: [
+                          { _id: 0, host: 'mongodb-0.mongodb-headless:27017', priority: 2 },
+                          { _id: 1, host: 'mongodb-1.mongodb-headless:27017', priority: 1 },
+                          { _id: 2, host: 'mongodb-2.mongodb-headless:27017', arbiterOnly: true }
+                        ]
+                      });
+                    }
+                  } catch (e) {
+                    rs.initiate({
+                      _id: 'rs0',
+                      members: [
+                        { _id: 0, host: 'mongodb-0.mongodb-headless:27017', priority: 2 },
+                        { _id: 1, host: 'mongodb-1.mongodb-headless:27017', priority: 1 },
+                        { _id: 2, host: 'mongodb-2.mongodb-headless:27017', arbiterOnly: true }
+                      ]
+                    });
+                  }
+                "
+              fi
               wait $MONGOPID
           ports:
             - containerPort: 27017
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: 50m
+              memory: 128Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 250m
+              memory: 256Mi
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongodb
-  namespace: smart-healthcare
-spec:
-  selector:
-    app: mongodb
-  ports:
-    - port: 27017
-      targetPort: 27017
----
+# ==============================================================================
+# REDIS, KAFKA, MAILPIT
+# ==============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -355,19 +622,68 @@ spec:
       port: 8025
       targetPort: 8025
 
+# ==============================================================================
+# EXTERNAL LOADBALANCERS (Dedicated Localhost Ports for DBeaver & DB Tools)
+# ==============================================================================
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-external
+  name: postgres-auth-external
   namespace: smart-healthcare
 spec:
   type: LoadBalancer
   selector:
-    app: postgres
+    app: postgres-auth
+    role: primary
   ports:
     - name: postgres
       port: 5433
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-auth-replica-external
+  namespace: smart-healthcare
+spec:
+  type: LoadBalancer
+  selector:
+    app: postgres-auth
+    role: replica
+  ports:
+    - name: postgres
+      port: 5434
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-prediction-external
+  namespace: smart-healthcare
+spec:
+  type: LoadBalancer
+  selector:
+    app: postgres-prediction
+    role: primary
+  ports:
+    - name: postgres
+      port: 5435
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-prediction-replica-external
+  namespace: smart-healthcare
+spec:
+  type: LoadBalancer
+  selector:
+    app: postgres-prediction
+    role: replica
+  ports:
+    - name: postgres
+      port: 5436
       targetPort: 5432
 ---
 apiVersion: v1
