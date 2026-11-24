@@ -128,12 +128,13 @@ public class AuthorizationServerConfig {
                                 "/auth/verify-email",
                                 "/auth/demo/public",
                                 "/auth/demo/oauth-info",
+                                "/auth/demo/jwt",
+                                "/auth/demo/api-key",
+                                "/auth/demo/basic",
                                 "/auth/me",
                                 "/me"
                         ).permitAll()
                         .requestMatchers("/auth/admin/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/auth/demo/api-key", "/auth/demo/admin-api-key").authenticated()
-                        .requestMatchers("/auth/demo/basic").authenticated()
                         .requestMatchers("/auth/demo/bearer-jwt").authenticated()
                         .requestMatchers("/auth/demo/service-to-service").authenticated()
                         .requestMatchers("/auth/**").permitAll()

@@ -1,126 +1,479 @@
 {
   "info": {
-    "_postman_id": "smarthealth-e2e-collection-v1",
-    "name": "Smart health care",
-    "description": "Comprehensive test suite covering Service Template, User Profile Service, Auth Service (Basic, Bearer/JWT, API Key, Admin Key, OAuth2), Health Records, ML Predictions, Go Report Service, and DB Replication / Observability.",
+    "_postman_id": "7f1396a8-2041-4770-bc04-8b1a37c95b00",
+    "name": "Smart Health Platform - Complete API Suite",
+    "description": "Zero-configuration Postman Collection for the Smart Healthcare microservices ecosystem.\n\nFirst 6 requests in 'auth service' demonstrate native Postman Authorization types:\n1. No Auth\n2. Basic Auth\n3. Bearer Token\n4. JWT Token (RSA-256)\n5. API Key\n6. OAuth 2.0 (Google OAuth)\n\nAll endpoints use direct, literal URLs (no vault, no collection/environment variables).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://127.0.0.1:8080"
-    },
-    {
-      "key": "authUrl",
-      "value": "http://127.0.0.1:8081"
-    },
-    {
-      "key": "adminUrl",
-      "value": "http://127.0.0.1:9090"
-    },
-    {
-      "key": "eurekaUrl",
-      "value": "http://127.0.0.1:8761"
-    },
-    {
-      "key": "goUrl",
-      "value": "http://127.0.0.1:8086"
-    },
-    {
-      "key": "mailpitUrl",
-      "value": "http://127.0.0.1:8025"
-    },
-    {
-      "key": "patientId",
-      "value": "53ca9f82-1d10-4d0c-b6be-126092d7c169"
-    },
-    {
-      "key": "predictionId",
-      "value": ""
-    },
-    {
-      "key": "jwtToken",
-      "value": ""
-    },
-    {
-      "key": "apiKey",
-      "value": "smarthealth-dev-secret-api-key-2026"
-    },
-    {
-      "key": "adminApiKey",
-      "value": "smarthealth-admin-secret-key-2026"
-    }
-  ],
   "item": [
     {
-      "name": "Service Template",
+      "name": "auth service",
+      "description": "Authentication and authorization service endpoints. First 6 requests specifically demonstrate Postman native Authorization types.",
       "item": [
         {
-          "name": "Service Template Ping",
+          "name": "1. No Auth (Public Endpoint)",
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/service-template/ping",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "service-template",
-                "ping"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "user-profile-service",
-      "item": [
-        {
-          "name": "Profile Ping",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/ping",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "ping"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Profile",
-          "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
               {
-                "key": "X-Dev-User-Id",
-                "value": "{{patientId}}"
+                "key": "Accept",
+                "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/users/me",
+              "raw": "http://localhost:8080/api/auth/demo/public",
+              "protocol": "http",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
+              "port": "8080",
               "path": [
                 "api",
-                "users",
-                "me"
+                "auth",
+                "demo",
+                "public"
               ]
-            }
+            },
+            "description": "1. NO AUTH DEMONSTRATION\n\nPublicly accessible endpoint that requires no credentials, tokens, or headers. Postman Authorization is set to 'No Auth'."
           }
         },
         {
-          "name": "Update Profile",
+          "name": "2. Basic Auth",
           "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "admin@smarthealth.internal",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "admin123",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/auth/demo/basic",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "demo",
+                "basic"
+              ]
+            },
+            "description": "2. BASIC AUTH DEMONSTRATION\n\nDemonstrates HTTP Basic Authentication using Postman's native Authorization tab ('Basic Auth'). Postman automatically encodes username:password into Base64 format."
+          }
+        },
+        {
+          "name": "3. Bearer Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vYXV0aC1zZXJ2aWNlOjgwODEiLCJzdWIiOiJhZG1pbkBzbWFydGhlYWx0aC5pbnRlcm5hbCIsImVtYWlsIjoiYWRtaW5Ac21hcnRoZWFsdGguaW50ZXJuYWwiLCJyb2xlcyI6WyJBRE1JTiJdLCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIiwiYXV0aG9yaXRpZXMiOlsicm9sZV9BRE1JTiJdfQ.sample",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/auth/demo/bearer-jwt",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "demo",
+                "bearer-jwt"
+              ]
+            },
+            "description": "3. BEARER TOKEN DEMONSTRATION\n\nDemonstrates Bearer Token authentication configured directly in Postman's native Authorization tab ('Bearer Token'). Send a minted RSA-256 JWT (from request #4) in this field."
+          }
+        },
+        {
+          "name": "4. JWT Token (Mint RSA-256 Bearer Token)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/auth/demo/jwt?role=ADMIN&email=admin@smarthealth.internal",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "demo",
+                "jwt"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "ADMIN"
+                },
+                {
+                  "key": "email",
+                  "value": "admin@smarthealth.internal"
+                }
+              ]
+            },
+            "description": "4. JWT TOKEN (MINT RSA-256) DEMONSTRATION\n\nMints a live cryptographically signed RSA-256 JWT Bearer token embedded with user roles and claims. Copy the 'token' string from the response and paste it into request #3 Bearer Token or Swagger!"
+          }
+        },
+        {
+          "name": "5. API Key Auth",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "X-API-KEY",
+                  "type": "string"
+                },
+                {
+                  "key": "value",
+                  "value": "smarthealth-admin-secret-key-2026",
+                  "type": "string"
+                },
+                {
+                  "key": "in",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/auth/demo/api-key",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "demo",
+                "api-key"
+              ]
+            },
+            "description": "5. API KEY AUTH DEMONSTRATION\n\nDemonstrates API Key authentication configured in Postman's native Authorization tab ('API Key'). Postman injects the Header 'X-API-KEY: smarthealth-admin-secret-key-2026'."
+          }
+        },
+        {
+          "name": "6. OAuth 2.0 (Google OAuth)",
+          "request": {
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code",
+                  "type": "string"
+                },
+                {
+                  "key": "authUrl",
+                  "value": "https://accounts.google.com/o/oauth2/v2/auth",
+                  "type": "string"
+                },
+                {
+                  "key": "accessTokenUrl",
+                  "value": "https://oauth2.googleapis.com/token",
+                  "type": "string"
+                },
+                {
+                  "key": "clientId",
+                  "value": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+                  "type": "string"
+                },
+                {
+                  "key": "clientSecret",
+                  "value": "YOUR_GOOGLE_CLIENT_SECRET",
+                  "type": "string"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "string"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://oauth.pstmn.io/v1/callback",
+                  "type": "string"
+                },
+                {
+                  "key": "clientAuth",
+                  "value": "sendClientCredentialsInBody",
+                  "type": "string"
+                },
+                {
+                  "key": "tokenType",
+                  "value": "Bearer",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "https://www.googleapis.com/oauth2/v3/userinfo",
+              "protocol": "https",
+              "host": [
+                "www",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "oauth2",
+                "v3",
+                "userinfo"
+              ]
+            },
+            "description": "6. OAUTH 2.0 (GOOGLE OAUTH) DEMONSTRATION\n\nDemonstrates OAuth 2.0 Authorization Code flow with Google OAuth in Postman's native Authorization tab ('OAuth 2.0').\nClick 'Get New Access Token' in Postman to launch Google's interactive login prompt with redirect URI 'https://oauth.pstmn.io/v1/callback'."
+          }
+        },
+        {
+          "name": "7. API Key Auth (POST JSON Body)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apiKey\": \"smarthealth-admin-secret-key-2026\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/auth/demo/api-key",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "demo",
+                "api-key"
+              ]
+            },
+            "description": "Single API Key test endpoint accepting key via JSON request body."
+          }
+        },
+        {
+          "name": "8. Login (POST Form Credentials)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "admin@smarthealth.internal",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "admin123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Performs standard form-login to establish session cookie with the Spring Authorization Server."
+          }
+        },
+        {
+          "name": "9. Register New User",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@smarthealth.io\",\n  \"password\": \"SecurePass123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"roles\": [\"PATIENT\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Registers a new user and sends an activation email to Mailpit."
+          }
+        },
+        {
+          "name": "10. Current User Session",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/auth/user",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "user"
+              ]
+            },
+            "description": "Retrieves the authenticated session profile and assigned roles."
+          }
+        },
+        {
+          "name": "11. Admin List All Users",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/auth/admin/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "admin",
+                "users"
+              ]
+            },
+            "description": "Lists all registered users in the platform (Admin privilege required)."
+          }
+        },
+        {
+          "name": "12. Admin Update User Roles",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
               {
@@ -128,186 +481,35 @@
                 "value": "application/json"
               },
               {
-                "key": "X-Dev-User-Id",
-                "value": "{{patientId}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Dr. Alex Mercer\",\n  \"dateOfBirth\": \"1985-06-12\",\n  \"gender\": \"MALE\",\n  \"phone\": \"+1-555-0144\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "me"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "auth service",
-      "item": [
-        {
-          "name": "Register Patient Account",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    var json = pm.response.json();",
-                  "    pm.collectionVariables.set('patientId', json.userId);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
+                "key": "Accept",
                 "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"patient_{{$randomInt}}@smarthealth.local\",\n  \"password\": \"SecurePass123!\"\n}"
+              "raw": "{\n  \"roles\": [\"PATIENT\", \"DOCTOR\"]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
+              "raw": "http://localhost:8080/api/auth/admin/users/1/roles",
+              "protocol": "http",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
+              "port": "8080",
               "path": [
                 "api",
                 "auth",
-                "register"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Public Demo (No Auth)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{authUrl}}/auth/demo/public",
-              "host": [
-                "{{authUrl}}"
-              ],
-              "path": [
-                "auth",
-                "demo",
-                "public"
-              ]
-            }
-          }
-        },
-        {
-          "name": "HTTP Basic Auth Demo",
-          "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "username",
-                  "value": "nikhil.test@smarthealth.io",
-                  "type": "string"
-                },
-                {
-                  "key": "password",
-                  "value": "Password123!",
-                  "type": "string"
-                }
+                "admin",
+                "users",
+                "1",
+                "roles"
               ]
             },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{authUrl}}/auth/demo/basic",
-              "host": [
-                "{{authUrl}}"
-              ],
-              "path": [
-                "auth",
-                "demo",
-                "basic"
-              ]
-            }
+            "description": "Updates roles for a target user ID (e.g. PATIENT, DOCTOR, ADMIN)."
           }
         },
         {
-          "name": "API Key Auth Demo (Standard Key)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-API-KEY",
-                "value": "{{apiKey}}"
-              }
-            ],
-            "url": {
-              "raw": "{{authUrl}}/auth/demo/api-key",
-              "host": [
-                "{{authUrl}}"
-              ],
-              "path": [
-                "auth",
-                "demo",
-                "api-key"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Admin Predefined API Key Demo",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-API-KEY",
-                "value": "{{adminApiKey}}"
-              }
-            ],
-            "url": {
-              "raw": "{{authUrl}}/auth/demo/admin-api-key",
-              "host": [
-                "{{authUrl}}"
-              ],
-              "path": [
-                "auth",
-                "demo",
-                "admin-api-key"
-              ]
-            }
-          }
-        },
-        {
-          "name": "OAuth2 Client Credentials (Token Exchange via Basic Auth)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var json = pm.response.json();",
-                  "    pm.collectionVariables.set('jwtToken', json.access_token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "13. OAuth2 Token - Client Credentials (M2M)",
           "request": {
             "auth": {
               "type": "basic",
@@ -329,6 +531,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
               }
             ],
             "body": {
@@ -341,256 +547,182 @@
                 },
                 {
                   "key": "scope",
-                  "value": "prediction.read prediction.write",
+                  "value": "prediction.read prediction.write health.read profile.read",
                   "type": "text"
                 }
               ]
             },
             "url": {
-              "raw": "{{authUrl}}/oauth2/token",
+              "raw": "http://localhost:8081/oauth2/token",
+              "protocol": "http",
               "host": [
-                "{{authUrl}}"
+                "localhost"
               ],
+              "port": "8081",
               "path": [
                 "oauth2",
                 "token"
               ]
-            }
+            },
+            "description": "M2M OAuth 2.0 token issuance via client_credentials flow using HTTP Basic client auth."
           }
         },
         {
-          "name": "Bearer Token (JWT) Demo",
+          "name": "14. OAuth2 & OIDC Discovery Info",
           "request": {
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{jwtToken}}",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{authUrl}}/auth/demo/bearer-jwt",
+              "raw": "http://localhost:8080/api/auth/demo/oauth-info",
+              "protocol": "http",
               "host": [
-                "{{authUrl}}"
+                "localhost"
               ],
+              "port": "8080",
               "path": [
+                "api",
                 "auth",
                 "demo",
-                "bearer-jwt"
+                "oauth-info"
               ]
-            }
+            },
+            "description": "Lists OAuth 2.0 server endpoints, clients, and scopes."
           }
         },
         {
-          "name": "Service-to-Service Communication Demo",
+          "name": "15. Service-to-Service M2M Demo",
           "request": {
             "auth": {
-              "type": "bearer",
-              "bearer": [
+              "type": "basic",
+              "basic": [
                 {
-                  "key": "token",
-                  "value": "{{jwtToken}}",
+                  "key": "username",
+                  "value": "health-data-service",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "nikhil",
                   "type": "string"
                 }
               ]
             },
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{authUrl}}/auth/demo/service-to-service",
+              "raw": "http://localhost:8080/api/auth/demo/service-to-service",
+              "protocol": "http",
               "host": [
-                "{{authUrl}}"
+                "localhost"
               ],
+              "port": "8080",
               "path": [
+                "api",
                 "auth",
                 "demo",
                 "service-to-service"
               ]
-            }
+            },
+            "description": "Demonstrates inter-service microservice authentication."
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "user-profile-service",
+      "description": "Patient and practitioner profile management service.",
+      "item": [
         {
-          "name": "OAuth 2.0 & OIDC Info",
+          "name": "Get User Profile",
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{authUrl}}/auth/demo/oauth-info",
-              "host": [
-                "{{authUrl}}"
-              ],
-              "path": [
-                "auth",
-                "demo",
-                "oauth-info"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Current User",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "me"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Dev Tokens",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/dev/tokens",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "dev",
-                "tokens"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Admin - List All Users & Roles",
-          "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
               {
-                "key": "X-API-KEY",
-                "value": "smarthealth-admin-secret-key-2026",
-                "type": "text",
-                "description": "Admin API Key"
+                "key": "Accept",
+                "value": "application/json"
               }
             ],
             "url": {
-              "raw": "http://localhost:8081/auth/admin/users",
+              "raw": "http://localhost:8080/api/profile/1",
               "protocol": "http",
               "host": [
                 "localhost"
               ],
-              "port": "8081",
+              "port": "8080",
               "path": [
-                "auth",
-                "admin",
-                "users"
+                "api",
+                "profile",
+                "1"
               ]
             },
-            "description": "Retrieve all registered users and their assigned roles (Requires ROLE_ADMIN)."
-          },
-          "response": []
+            "description": "Retrieves profile record for user 1."
+          }
         },
         {
-          "name": "Admin - Update User Roles (Set to DOCTOR)",
+          "name": "Update User Profile",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
               {
-                "key": "X-API-KEY",
-                "value": "smarthealth-admin-secret-key-2026",
-                "type": "text"
+                "key": "Content-Type",
+                "value": "application/json"
               },
               {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
+                "key": "Accept",
+                "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"roles\": [\n    \"DOCTOR\"\n  ]\n}"
+              "raw": "{\n  \"firstName\": \"Nikhil\",\n  \"lastName\": \"Rao\",\n  \"phone\": \"+1-555-0199\",\n  \"address\": \"742 Evergreen Terrace\",\n  \"city\": \"Springfield\",\n  \"state\": \"OR\",\n  \"zipCode\": \"97477\",\n  \"emergencyContactName\": \"Jane Doe\",\n  \"emergencyContactPhone\": \"+1-555-0198\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8081/auth/admin/users/{{userId}}/roles",
+              "raw": "http://localhost:8080/api/profile/1",
               "protocol": "http",
               "host": [
                 "localhost"
               ],
-              "port": "8081",
+              "port": "8080",
               "path": [
-                "auth",
-                "admin",
-                "users",
-                "{{userId}}",
-                "roles"
+                "api",
+                "profile",
+                "1"
               ]
             },
-            "description": "Admin updates user roles to DOCTOR using Admin API Key."
-          },
-          "response": []
-        },
-        {
-          "name": "Admin - Assign Single Role (Set to ADMIN)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "X-API-KEY",
-                "value": "smarthealth-admin-secret-key-2026",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "http://localhost:8081/auth/admin/users/{{userId}}/role/ADMIN",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8081",
-              "path": [
-                "auth",
-                "admin",
-                "users",
-                "{{userId}}",
-                "role",
-                "ADMIN"
-              ]
-            },
-            "description": "Quick shortcut to assign a single role (e.g. ADMIN, DOCTOR, PATIENT) to a user."
-          },
-          "response": []
+            "description": "Updates demographic and emergency contact information for user 1."
+          }
         }
       ]
     },
     {
       "name": "health-data-service",
+      "description": "Vitals and biometric time-series ingestion and analytics service.",
       "item": [
         {
-          "name": "Health Ping",
+          "name": "Ingest Vital Metric",
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/health/ping",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "health",
-                "ping"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Create Health Record",
-          "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -598,185 +730,222 @@
                 "value": "application/json"
               },
               {
-                "key": "X-Dev-User-Id",
-                "value": "{{patientId}}"
+                "key": "Accept",
+                "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"ageYears\": 45,\n  \"sex\": \"MALE\",\n  \"heightCm\": 175.5,\n  \"weightKg\": 82.0,\n  \"bmi\": 26.6,\n  \"systolicBp\": 135,\n  \"diastolicBp\": 85,\n  \"fastingGlucoseMgDl\": 110.0,\n  \"hba1cPercent\": 6.1,\n  \"totalCholesterolMgDl\": 210.0,\n  \"hdlMgDl\": 48.0,\n  \"ldlMgDl\": 130.0,\n  \"smokingStatus\": \"NEVER\",\n  \"activityLevel\": \"MODERATE\",\n  \"hasHypertension\": true,\n  \"hasHeartDisease\": false,\n  \"familyHistoryDiabetes\": true\n}"
+              "raw": "{\n  \"patientId\": \"1\",\n  \"metricType\": \"HEART_RATE\",\n  \"value\": 74.5,\n  \"unit\": \"bpm\",\n  \"recordedAt\": \"2026-11-25T01:00:00Z\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/health/records",
+              "raw": "http://localhost:8080/api/health/metrics",
+              "protocol": "http",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
+              "port": "8080",
               "path": [
                 "api",
                 "health",
-                "records"
+                "metrics"
               ]
-            }
+            },
+            "description": "Records biometric telemetry to MongoDB time-series collection."
           }
         },
         {
-          "name": "Get Latest Record",
+          "name": "Get Patient Metrics",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/health/records/latest?patientId={{patientId}}",
+              "raw": "http://localhost:8080/api/health/metrics/patient/1",
+              "protocol": "http",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
+              "port": "8080",
               "path": [
                 "api",
                 "health",
-                "records",
-                "latest"
+                "metrics",
+                "patient",
+                "1"
+              ]
+            },
+            "description": "Queries historical telemetry records for patient 1."
+          }
+        },
+        {
+          "name": "Get Aggregates",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/health/metrics/aggregates?patientId=1&metricType=HEART_RATE",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "health",
+                "metrics",
+                "aggregates"
               ],
               "query": [
                 {
                   "key": "patientId",
-                  "value": "{{patientId}}"
+                  "value": "1"
+                },
+                {
+                  "key": "metricType",
+                  "value": "HEART_RATE"
                 }
               ]
-            }
+            },
+            "description": "Returns statistical aggregates (min, max, avg) for a given metric."
           }
         }
       ]
     },
     {
       "name": "prediction-service",
+      "description": "AI & ML risk assessment inference service.",
       "item": [
         {
-          "name": "Get Models",
+          "name": "Predict Health Risk",
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/predictions/models",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "predictions",
-                "models"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Predict All Diseases",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var json = pm.response.json();",
-                  "pm.collectionVariables.set('predictionId', json.prediction_id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"patient_id\": \"{{patientId}}\",\n  \"patient_name\": \"Alex Mercer\",\n  \"patient_email\": \"patient@smarthealth.local\",\n  \"features\": {\n    \"age\": 45,\n    \"sex\": \"Male\",\n    \"height_cm\": 175.5,\n    \"weight_kg\": 82.0,\n    \"bmi\": 26.6,\n    \"systolic_bp\": 135.0,\n    \"diastolic_bp\": 85.0,\n    \"glucose_mg_dl\": 110.0,\n    \"cholesterol_mg_dl\": 210.0,\n    \"resting_heart_rate\": 74.0,\n    \"physical_activity\": \"Moderate\",\n    \"smoking\": 0,\n    \"family_history_diabetes\": 1,\n    \"family_history_heart_disease\": 0,\n    \"frequent_urination\": 1,\n    \"excessive_thirst\": 1\n  }\n}"
+              "raw": "{\n  \"patientId\": \"1\",\n  \"age\": 45,\n  \"systolicBp\": 135,\n  \"diastolicBp\": 88,\n  \"cholesterol\": 215,\n  \"glucose\": 105,\n  \"heartRate\": 78,\n  \"bmi\": 26.4\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/predictions/predict/all",
+              "raw": "http://localhost:8080/api/predict/risk",
+              "protocol": "http",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
+              "port": "8080",
               "path": [
                 "api",
-                "predictions",
                 "predict",
-                "all"
+                "risk"
               ]
-            }
+            },
+            "description": "Computes cardiovascular and metabolic health risk scores."
+          }
+        },
+        {
+          "name": "Model Metadata",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/predict/model-info",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "predict",
+                "model-info"
+              ]
+            },
+            "description": "Returns active model version, features, and accuracy benchmarks."
           }
         }
       ]
     },
     {
       "name": "go-service",
+      "description": "High-throughput Go telemetry ingestion service.",
       "item": [
         {
-          "name": "Go Microservice Health",
+          "name": "High-Throughput Ingestion",
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{goUrl}}/healthz",
-              "host": [
-                "{{goUrl}}"
-              ],
-              "path": [
-                "healthz"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Download PDF Report (Go gRPC)",
-          "request": {
-            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
             "header": [
               {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
                 "key": "Accept",
-                "value": "application/pdf"
+                "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"iot-sensor-8891\",\n  \"patientId\": \"1\",\n  \"reading\": {\n    \"temperature\": 98.6,\n    \"spo2\": 99,\n    \"pulse\": 72\n  },\n  \"timestamp\": 1732492800\n}"
+            },
             "url": {
-              "raw": "{{baseUrl}}/api/predictions/{{predictionId}}/report",
+              "raw": "http://localhost:8080/api/go/metrics",
+              "protocol": "http",
               "host": [
-                "{{baseUrl}}"
+                "localhost"
               ],
+              "port": "8080",
               "path": [
                 "api",
-                "predictions",
-                "{{predictionId}}",
-                "report"
+                "go",
+                "metrics"
               ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Infrastructure & Observability",
-      "item": [
-        {
-          "name": "Gateway Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/actuator/health",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "actuator",
-                "health"
-              ]
-            }
+            },
+            "description": "Ultra low latency ingestion pipeline routed through the Go engine."
           }
         },
         {
-          "name": "Eureka Registry",
+          "name": "Go Service Health",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
               {
@@ -785,139 +954,195 @@
               }
             ],
             "url": {
-              "raw": "{{eurekaUrl}}/eureka/apps",
+              "raw": "http://localhost:8080/api/go/health",
+              "protocol": "http",
               "host": [
-                "{{eurekaUrl}}"
+                "localhost"
               ],
+              "port": "8080",
+              "path": [
+                "api",
+                "go",
+                "health"
+              ]
+            },
+            "description": "Liveness probe for the Go microservice."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure & Observability",
+      "description": "Platform telemetry, service discovery, configuration server, and mail server endpoints.",
+      "item": [
+        {
+          "name": "API Gateway Actuator Health",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/actuator/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Direct health and liveness status of the Spring Cloud Gateway."
+          }
+        },
+        {
+          "name": "Eureka Service Registry",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8761/eureka/apps",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8761",
               "path": [
                 "eureka",
                 "apps"
               ]
-            }
+            },
+            "description": "Lists all registered active microservice instances in Eureka."
           }
         },
         {
-          "name": "Admin Server Instances",
+          "name": "Spring Cloud Config Server",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{adminUrl}}/instances",
-              "host": [
-                "{{adminUrl}}"
-              ],
-              "path": [
-                "instances"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Prometheus Scrape Targets",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://127.0.0.1:9091/api/v1/targets",
+              "raw": "http://localhost:8888/auth-service/default",
               "protocol": "http",
               "host": [
-                "127",
-                "0",
-                "0",
-                "1"
+                "localhost"
               ],
-              "port": "9091",
+              "port": "8888",
+              "path": [
+                "auth-service",
+                "default"
+              ]
+            },
+            "description": "Fetches centralized configuration properties for auth-service."
+          }
+        },
+        {
+          "name": "Mailpit Email Messages",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8025/api/v1/messages",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8025",
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ]
+            },
+            "description": "Inspects verification emails and activation tokens captured by Mailpit."
+          }
+        },
+        {
+          "name": "Prometheus Active Targets",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:9090/api/v1/targets",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "9090",
               "path": [
                 "api",
                 "v1",
                 "targets"
               ]
-            }
+            },
+            "description": "Lists all active metric scraping targets configured in Prometheus."
           }
         },
         {
-          "name": "Grafana Health Check",
+          "name": "Grafana Liveness Probe",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://127.0.0.1:3000/api/health",
+              "raw": "http://localhost:3000/api/health",
               "protocol": "http",
               "host": [
-                "127",
-                "0",
-                "0",
-                "1"
+                "localhost"
               ],
               "port": "3000",
               "path": [
                 "api",
                 "health"
               ]
-            }
-          }
-        },
-        {
-          "name": "DB Exporter - PostgreSQL Metrics & Lag",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://127.0.0.1:9187/metrics",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "9187",
-              "path": [
-                "metrics"
-              ]
-            }
-          }
-        },
-        {
-          "name": "DB Exporter - MariaDB Metrics & Lag",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://127.0.0.1:9104/metrics",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "9104",
-              "path": [
-                "metrics"
-              ]
-            }
-          }
-        },
-        {
-          "name": "DB Exporter - MongoDB Replica Set Metrics & Lag",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://127.0.0.1:9216/metrics",
-              "protocol": "http",
-              "host": [
-                "127",
-                "0",
-                "0",
-                "1"
-              ],
-              "port": "9216",
-              "path": [
-                "metrics"
-              ]
-            }
+            },
+            "description": "Grafana dashboard server health check."
           }
         }
       ]

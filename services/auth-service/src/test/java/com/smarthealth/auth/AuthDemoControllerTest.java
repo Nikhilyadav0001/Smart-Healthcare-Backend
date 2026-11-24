@@ -1,6 +1,7 @@
 package com.smarthealth.auth;
 
 import com.smarthealth.auth.controller.AuthDemoController;
+import com.smarthealth.auth.controller.AuthDemoController.ApiKeyTestRequest;
 import com.smarthealth.auth.security.ApiKeyAuthenticationToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,68 +43,72 @@ class AuthDemoControllerTest {
                 List.of(new SimpleGrantedAuthority("ROLE_PATIENT"))
         );
 
-        ResponseEntity<Map<String, Object>> resp = controller.basicAuthDemo(auth);
+        ResponseEntity<Map<String, Object>> resp = controller.basicAuthDemo(null, auth);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
         assertEquals("HTTP Basic", resp.getBody().get("authenticationType"));
         assertEquals("user@smarthealth.io", resp.getBody().get("principal"));
     }
 
     @Test
-    void testApiKey_Standard_Authenticated() {
+    void testApiKeyGet_Standard_Authenticated() {
         ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
                 "api-client",
-                "test-api-key",
+                "smarthealth-dev-secret-api-key-2026",
                 List.of(new SimpleGrantedAuthority("ROLE_API_CLIENT"))
         );
 
-        ResponseEntity<Map<String, Object>> resp = controller.apiKeyDemo("test-api-key", auth);
+        ResponseEntity<Map<String, Object>> resp = controller.testApiKeyGet("smarthealth-dev-secret-api-key-2026", auth);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
-        assertEquals("Standard API Key", resp.getBody().get("authenticationType"));
-        assertEquals("api-client", resp.getBody().get("principal"));
-        assertEquals(false, resp.getBody().get("isAdmin"));
+        assertEquals("SUCCESS", resp.getBody().get("status"));
+        assertEquals(true, resp.getBody().get("valid"));
+        assertEquals("Standard Client API Key", resp.getBody().get("keyType"));
     }
 
     @Test
-    void testApiKey_Admin_Authenticated() {
+    void testApiKeyGet_Admin_Authenticated() {
         ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
                 "admin-user",
-                "test-admin-key",
+                "smarthealth-admin-secret-key-2026",
                 List.of(
                         new SimpleGrantedAuthority("ROLE_ADMIN"),
                         new SimpleGrantedAuthority("ROLE_API_CLIENT")
                 )
         );
 
-        ResponseEntity<Map<String, Object>> resp = controller.apiKeyDemo("test-admin-key", auth);
+        ResponseEntity<Map<String, Object>> resp = controller.testApiKeyGet("smarthealth-admin-secret-key-2026", auth);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
-        assertEquals("Admin API Key", resp.getBody().get("authenticationType"));
-        assertEquals("admin-user", resp.getBody().get("principal"));
-        assertEquals(true, resp.getBody().get("isAdmin"));
+        assertEquals("SUCCESS", resp.getBody().get("status"));
+        assertEquals(true, resp.getBody().get("valid"));
+        assertEquals("Admin API Key", resp.getBody().get("keyType"));
     }
 
     @Test
-    void testAdminApiKeyEndpoint_Success() {
-        ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
-                "admin-user",
-                "test-admin-key",
-                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-        );
-
-        ResponseEntity<Map<String, Object>> resp = controller.adminApiKeyDemo("test-admin-key", auth);
+    void testApiKeyPost_WithValidStandardKey() {
+        ApiKeyTestRequest req = new ApiKeyTestRequest("smarthealth-dev-secret-api-key-2026");
+        ResponseEntity<Map<String, Object>> resp = controller.testApiKeyPost(req, null, null);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
-        assertEquals("Admin API Key", resp.getBody().get("authenticationType"));
+        assertEquals("SUCCESS", resp.getBody().get("status"));
+        assertEquals(true, resp.getBody().get("valid"));
+        assertEquals("Standard Client API Key", resp.getBody().get("keyType"));
     }
 
     @Test
-    void testAdminApiKeyEndpoint_ForbiddenForStandardUser() {
-        ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
-                "api-client",
-                "test-api-key",
-                List.of(new SimpleGrantedAuthority("ROLE_API_CLIENT"))
-        );
+    void testApiKeyPost_WithValidAdminKey() {
+        ApiKeyTestRequest req = new ApiKeyTestRequest("smarthealth-admin-secret-key-2026");
+        ResponseEntity<Map<String, Object>> resp = controller.testApiKeyPost(req, null, null);
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals("SUCCESS", resp.getBody().get("status"));
+        assertEquals(true, resp.getBody().get("valid"));
+        assertEquals("Admin API Key", resp.getBody().get("keyType"));
+    }
 
-        ResponseEntity<Map<String, Object>> resp = controller.adminApiKeyDemo("test-api-key", auth);
-        assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
+    @Test
+    void testApiKeyPost_WithInvalidKey() {
+        ApiKeyTestRequest req = new ApiKeyTestRequest("invalid-dummy-key");
+        ResponseEntity<Map<String, Object>> resp = controller.testApiKeyPost(req, null, null);
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+        assertEquals("FAILED", resp.getBody().get("status"));
+        assertEquals(false, resp.getBody().get("valid"));
     }
 
     @Test

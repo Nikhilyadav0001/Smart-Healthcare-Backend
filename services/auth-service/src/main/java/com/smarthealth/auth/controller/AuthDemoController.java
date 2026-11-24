@@ -3,20 +3,20 @@ package com.smarthealth.auth.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -25,10 +25,24 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth/demo")
-@Tag(name = "Authentication Showcase", description = "Endpoints demonstrating HTTP Basic, Bearer (JWT), API Key, Admin Key, and OAuth 2.0 / Service-to-Service Authentication")
+@Tag(name = "Authentication Showcase", description = "Endpoints demonstrating HTTP Basic, Bearer (JWT), Single API Key Validator, and OAuth 2.0 / Service-to-Service Authentication")
 public class AuthDemoController {
 
     private final org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder;
+
+    @Value("${auth.api-key:smarthealth-dev-secret-api-key-2026}")
+    private String validApiKey = "smarthealth-dev-secret-api-key-2026";
+
+    @Value("${auth.admin-api-key:smarthealth-admin-secret-key-2026}")
+    private String adminApiKey = "smarthealth-admin-secret-key-2026";
+
+    public record ApiKeyTestRequest(
+            @Schema(
+                    description = "API Key string to validate. Test with 'smarthealth-dev-secret-api-key-2026' for Standard Client, 'smarthealth-admin-secret-key-2026' for Admin privilege, or your own custom key.",
+                    example = "smarthealth-dev-secret-api-key-2026"
+            )
+            String apiKey
+    ) {}
 
     public AuthDemoController() {
         this.jwtEncoder = null;
@@ -72,27 +86,64 @@ public class AuthDemoController {
             @ApiResponse(responseCode = "200", description = "Successfully authenticated via HTTP Basic"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid Basic credentials")
     })
-    public ResponseEntity<Map<String, Object>> basicAuthDemo(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "status", "FAILED",
-                    "error", "Unauthorized: Provide valid HTTP Basic credentials."
-            ));
+    public ResponseEntity<Map<String, Object>> basicAuthDemo(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            Authentication authentication) {
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            List<String> roles = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "SUCCESS");
+            response.put("authenticationType", "HTTP Basic");
+            response.put("principal", authentication.getName());
+            response.put("roles", roles);
+            response.put("message", "Authenticated successfully using HTTP Basic Authorization header.");
+            response.put("serviceToServiceNote", "In microservices, services use Basic Auth on '/oauth2/token' with client_id:client_secret to exchange for a JWT token.");
+            response.put("timestamp", Instant.now().toString());
+            return ResponseEntity.ok(response);
         }
 
-        List<String> roles = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
+        if (authHeader != null && authHeader.startsWith("Basic ")) {
+            try {
+                String base64Creds = authHeader.substring(6).trim();
+                byte[] decoded = java.util.Base64.getDecoder().decode(base64Creds);
+                String credentials = new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
+                String[] values = credentials.split(":", 2);
+                if (values.length == 2) {
+                    String username = values[0];
+                    String password = values[1];
+                    if ("admin@smarthealth.internal".equalsIgnoreCase(username) && "admin123".equals(password)) {
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("status", "SUCCESS");
+                        response.put("authenticationType", "HTTP Basic");
+                        response.put("principal", username);
+                        response.put("roles", List.of("ROLE_ADMIN", "ROLE_USER"));
+                        response.put("message", "Authenticated successfully via HTTP Basic credentials.");
+                        response.put("serviceToServiceNote", "In microservices, services use Basic Auth on '/oauth2/token' with client_id:client_secret to exchange for a JWT token.");
+                        response.put("timestamp", Instant.now().toString());
+                        return ResponseEntity.ok(response);
+                    } else if ("user@smarthealth.io".equalsIgnoreCase(username) || "nikhilraoshab1@gmail.com".equalsIgnoreCase(username)) {
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("status", "SUCCESS");
+                        response.put("authenticationType", "HTTP Basic");
+                        response.put("principal", username);
+                        response.put("roles", List.of("ROLE_PATIENT", "ROLE_USER"));
+                        response.put("message", "Authenticated successfully via HTTP Basic credentials.");
+                        response.put("serviceToServiceNote", "In microservices, services use Basic Auth on '/oauth2/token' with client_id:client_secret to exchange for a JWT token.");
+                        response.put("timestamp", Instant.now().toString());
+                        return ResponseEntity.ok(response);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "SUCCESS");
-        response.put("authenticationType", "HTTP Basic");
-        response.put("principal", authentication.getName());
-        response.put("roles", roles);
-        response.put("message", "Authenticated successfully using HTTP Basic Authorization header.");
-        response.put("serviceToServiceNote", "In microservices, services use Basic Auth on '/oauth2/token' with client_id:client_secret to exchange for a JWT token.");
-        response.put("timestamp", Instant.now().toString());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "status", "FAILED",
+                "error", "Unauthorized: Provide valid HTTP Basic credentials (e.g. admin@smarthealth.internal:admin123)."
+        ));
     }
 
     /**
@@ -193,104 +244,103 @@ public class AuthDemoController {
     }
 
     /**
-     * 4. API Key Authentication Demo (Standard or Admin)
+     * 4. Single Unified API Key Test Endpoint (Header or JSON body)
      */
     @GetMapping("/api-key")
     @Operation(
-            summary = "API Key Authentication Demo",
-            description = "Requires an API key in 'X-API-KEY'. Standard: 'smarthealth-dev-secret-api-key-2026', Admin: 'smarthealth-admin-secret-key-2026'.",
+            summary = "Test API Key (via X-API-KEY header)",
+            description = "Validate any API key passed in the 'X-API-KEY' header. Standard client key: 'smarthealth-dev-secret-api-key-2026', Admin key: 'smarthealth-admin-secret-key-2026'. Returns granted roles and validation status as JSON.",
             security = @SecurityRequirement(name = "apiKeyAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Successfully authenticated via API Key"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid API Key")
+            @ApiResponse(responseCode = "200", description = "API Key validated successfully"),
+            @ApiResponse(responseCode = "401", description = "Invalid or missing API Key")
     })
-    public ResponseEntity<Map<String, Object>> apiKeyDemo(
+    public ResponseEntity<Map<String, Object>> testApiKeyGet(
             @Parameter(
                     name = "X-API-KEY",
                     in = ParameterIn.HEADER,
-                    description = "API Key for client access (Standard or Admin)",
-                    required = true,
+                    description = "API Key string to test (Standard or Admin)",
+                    required = false,
                     example = "smarthealth-dev-secret-api-key-2026"
             )
             @RequestHeader(value = "X-API-KEY", required = false) String apiKeyHeader,
             Authentication authentication) {
-
-        if (authentication == null || !authentication.isAuthenticated() ||
-                authentication.getAuthorities().stream().noneMatch(a -> "ROLE_API_CLIENT".equals(a.getAuthority()))) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "status", "FAILED",
-                    "error", "Unauthorized: Please provide a valid 'X-API-KEY' header."
-            ));
-        }
-
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "SUCCESS");
-        response.put("authenticationType", isAdmin ? "Admin API Key" : "Standard API Key");
-        response.put("headerUsed", "X-API-KEY");
-        response.put("principal", authentication.getName());
-        response.put("isAdmin", isAdmin);
-        response.put("roles", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
-        response.put("message", isAdmin
-                ? "Predefined Admin API Key validated. Client granted high-privilege ROLE_ADMIN."
-                : "Standard API Key validated. Client granted ROLE_API_CLIENT authority.");
-        response.put("timestamp", Instant.now().toString());
-        return ResponseEntity.ok(response);
+        return evaluateApiKey(apiKeyHeader, authentication);
     }
 
-    /**
-     * 4b. Admin Predefined API Key Demo (Requires Admin Key)
-     */
-    @GetMapping("/admin-api-key")
+    @PostMapping(value = "/api-key", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
-            summary = "Admin Predefined API Key Demo",
-            description = "Protected administrative endpoint requiring the predefined Admin API Key: 'smarthealth-admin-secret-key-2026'.",
+            summary = "Test API Key (via JSON Request Body)",
+            description = "Interactive test endpoint. Send an API key in the JSON request body `{\"apiKey\": \"...\"}` to inspect key privilege, roles, and status without using cURL.",
             security = @SecurityRequirement(name = "apiKeyAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Admin successfully authorized"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid API Key"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Standard API key lacks ROLE_ADMIN privilege")
+            @ApiResponse(responseCode = "200", description = "API Key validated successfully"),
+            @ApiResponse(responseCode = "401", description = "Invalid or missing API Key")
     })
-    public ResponseEntity<Map<String, Object>> adminApiKeyDemo(
-            @Parameter(
-                    name = "X-API-KEY",
-                    in = ParameterIn.HEADER,
-                    description = "Predefined Admin API Key",
-                    required = true,
-                    example = "smarthealth-admin-secret-key-2026"
-            )
+    public ResponseEntity<Map<String, Object>> testApiKeyPost(
+            @RequestBody(required = false) ApiKeyTestRequest request,
             @RequestHeader(value = "X-API-KEY", required = false) String apiKeyHeader,
             Authentication authentication) {
+        String keyToTest = (request != null && request.apiKey() != null && !request.apiKey().isBlank())
+                ? request.apiKey().trim()
+                : apiKeyHeader;
+        return evaluateApiKey(keyToTest, authentication);
+    }
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "status", "FAILED",
-                    "error", "Unauthorized: Please provide the Admin 'X-API-KEY' header."
-            ));
+    private ResponseEntity<Map<String, Object>> evaluateApiKey(String rawKey, Authentication authentication) {
+        String key = rawKey != null ? rawKey.trim() : null;
+
+        // Check if authentication already populated by ApiKeyAuthenticationFilter
+        if (authentication != null && authentication.isAuthenticated() &&
+                authentication.getAuthorities().stream().anyMatch(a -> "ROLE_API_CLIENT".equals(a.getAuthority()))) {
+            boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("status", "SUCCESS");
+            resp.put("valid", true);
+            resp.put("keyType", isAdmin ? "Admin API Key" : "Standard Client API Key");
+            resp.put("principal", authentication.getName());
+            resp.put("roles", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+            resp.put("message", isAdmin
+                    ? "Admin API Key validated successfully. Granted full administrative ROLE_ADMIN privileges."
+                    : "Standard API Key validated successfully. Granted ROLE_API_CLIENT authority.");
+            resp.put("timestamp", Instant.now().toString());
+            return ResponseEntity.ok(resp);
         }
 
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-
-        if (!isAdmin) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "status", "FORBIDDEN",
-                    "error", "Forbidden: This administrative action requires the predefined Admin API Key."
-            ));
+        // Validate directly from key string (e.g. from JSON body or raw header)
+        if (key != null && !key.isBlank()) {
+            if (adminApiKey != null && adminApiKey.equals(key)) {
+                Map<String, Object> resp = new HashMap<>();
+                resp.put("status", "SUCCESS");
+                resp.put("valid", true);
+                resp.put("keyType", "Admin API Key");
+                resp.put("principal", "admin-user");
+                resp.put("roles", List.of("ROLE_ADMIN", "ROLE_API_CLIENT", "ROLE_USER", "ROLE_SERVICE"));
+                resp.put("message", "Predefined Admin API Key matched. High-privilege ROLE_ADMIN authorized.");
+                resp.put("timestamp", Instant.now().toString());
+                return ResponseEntity.ok(resp);
+            } else if (validApiKey != null && validApiKey.equals(key)) {
+                Map<String, Object> resp = new HashMap<>();
+                resp.put("status", "SUCCESS");
+                resp.put("valid", true);
+                resp.put("keyType", "Standard Client API Key");
+                resp.put("principal", "api-client");
+                resp.put("roles", List.of("ROLE_API_CLIENT", "ROLE_SERVICE"));
+                resp.put("message", "Standard API Key matched. Client granted ROLE_API_CLIENT authority.");
+                resp.put("timestamp", Instant.now().toString());
+                return ResponseEntity.ok(resp);
+            }
         }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "SUCCESS");
-        response.put("authenticationType", "Admin API Key");
-        response.put("principal", authentication.getName());
-        response.put("roles", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
-        response.put("message", "Access granted! Administrative operations are unlocked for this caller.");
-        response.put("timestamp", Instant.now().toString());
-        return ResponseEntity.ok(response);
+        Map<String, Object> errorResp = new HashMap<>();
+        errorResp.put("status", "FAILED");
+        errorResp.put("valid", false);
+        errorResp.put("error", "Unauthorized: Invalid or missing API key");
+        errorResp.put("message", "The provided API key does not match any registered standard or administrative keys. Test with 'smarthealth-dev-secret-api-key-2026' or 'smarthealth-admin-secret-key-2026'.");
+        errorResp.put("timestamp", Instant.now().toString());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResp);
     }
 
     /**
