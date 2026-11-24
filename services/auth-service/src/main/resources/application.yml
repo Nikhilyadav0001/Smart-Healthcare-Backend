@@ -1,10 +1,13 @@
 server:
   port: 8081
+  forward-headers-strategy: framework
   servlet:
     session:
       tracking-modes: cookie
       cookie:
         name: AUTH_SESSION
+        path: /
+        same-site: lax
 
 spring:
   application:

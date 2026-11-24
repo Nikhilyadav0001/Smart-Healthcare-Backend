@@ -17,6 +17,8 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -29,6 +31,7 @@ public class SocialLoginAuthenticationSuccessHandler
     private final AuthUserDetailsService authUserDetailsService;
     private final SecurityContextRepository securityContextRepository =
             new HttpSessionSecurityContextRepository();
+    private final RequestCache requestCache = new HttpSessionRequestCache();
 
     public SocialLoginAuthenticationSuccessHandler(
             SocialLoginService socialLoginService,
@@ -84,7 +87,12 @@ public class SocialLoginAuthenticationSuccessHandler
 
         securityContextRepository.saveContext(context, request, response);
 
-        super.onAuthenticationSuccess(request, response, localAuthentication);
+        // Clear request cache to prevent saved request redirect loops
+        requestCache.removeRequest(request, response);
+        clearAuthenticationAttributes(request);
+
+        // Always redirect cleanly to SPA home route
+        response.sendRedirect("/");
     }
 
     private String extractProviderSubject(String provider, OAuth2User user) {

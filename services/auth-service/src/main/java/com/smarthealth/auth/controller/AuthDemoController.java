@@ -28,6 +28,17 @@ import java.util.Map;
 @Tag(name = "Authentication Showcase", description = "Endpoints demonstrating HTTP Basic, Bearer (JWT), API Key, Admin Key, and OAuth 2.0 / Service-to-Service Authentication")
 public class AuthDemoController {
 
+    private final org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder;
+
+    public AuthDemoController() {
+        this.jwtEncoder = null;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AuthDemoController(org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder) {
+        this.jwtEncoder = jwtEncoder;
+    }
+
     /**
      * 1. Public Endpoint - No Authentication
      */
@@ -85,7 +96,64 @@ public class AuthDemoController {
     }
 
     /**
-     * 3. Bearer Token (JWT) Authentication Demo
+     * 3a. Mint Sample RSA-256 JWT Bearer Token
+     */
+    @GetMapping("/jwt")
+    @Operation(
+            summary = "Mint Sample JWT Bearer Token",
+            description = "Generates a signed RSA-256 JWT Bearer token with custom roles (default: ROLE_ADMIN, ROLE_USER). You can copy the 'token' field and paste it into Swagger's Authorize dialog (bearerAuth) or Postman to test protected endpoints like /auth/demo/bearer-jwt and /auth/admin/users."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sample JWT token generated successfully")
+    })
+    public ResponseEntity<Map<String, Object>> generateJwtDemo(
+            @Parameter(description = "User role to embed into the token claim (ADMIN, DOCTOR, PATIENT)", example = "ADMIN")
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "ADMIN") String role,
+            @Parameter(description = "User email/subject for the token", example = "admin@smarthealth.internal")
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "admin@smarthealth.internal") String email) {
+
+        if (jwtEncoder == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                    "status", "ERROR",
+                    "error", "JwtEncoder not configured in current environment."
+            ));
+        }
+
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(1, java.time.temporal.ChronoUnit.HOURS);
+
+        String upperRole = role.toUpperCase();
+        String cleanRole = upperRole.startsWith("ROLE_") ? upperRole : "ROLE_" + upperRole;
+
+        org.springframework.security.oauth2.jwt.JwtClaimsSet claims = org.springframework.security.oauth2.jwt.JwtClaimsSet.builder()
+                .issuer("http://auth-service:8081")
+                .issuedAt(now)
+                .expiresAt(expiresAt)
+                .subject(email)
+                .claim("email", email)
+                .claim("roles", List.of(cleanRole.replace("ROLE_", "")))
+                .claim("scope", "openid profile email")
+                .claim("authorities", List.of(cleanRole))
+                .build();
+
+        org.springframework.security.oauth2.jwt.JwsHeader header = org.springframework.security.oauth2.jwt.JwsHeader.with(org.springframework.security.oauth2.jose.jws.SignatureAlgorithm.RS256).build();
+        String tokenValue = jwtEncoder.encode(org.springframework.security.oauth2.jwt.JwtEncoderParameters.from(header, claims)).getTokenValue();
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("status", "SUCCESS");
+        resp.put("tokenType", "Bearer");
+        resp.put("token", tokenValue);
+        resp.put("subject", email);
+        resp.put("roles", List.of(cleanRole));
+        resp.put("expiresInSeconds", 3600);
+        resp.put("instructions", "Copy 'token' value, click 'Authorize' at the top of Swagger UI, paste into bearerAuth, then execute /auth/demo/bearer-jwt or /auth/admin/users!");
+        resp.put("timestamp", now.toString());
+
+        return ResponseEntity.ok(resp);
+    }
+
+    /**
+     * 3b. Bearer Token (JWT) Authentication Demo
      */
     @GetMapping("/bearer-jwt")
     @Operation(
