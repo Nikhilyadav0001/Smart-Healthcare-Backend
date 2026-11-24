@@ -78,10 +78,17 @@ pipeline {
             steps {
                 echo 'Deploying application manifests to Kubernetes (smart-healthcare namespace)...'
                 bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config apply -k infra/k8s/base'
-                echo 'Verifying rollout status of critical microservices...'
-                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/postgres -n smart-healthcare --timeout=120s'
+                echo 'Verifying rollout status of critical datastores and microservices...'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/postgres-auth -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/postgres-auth-replica -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/postgres-prediction -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/postgres-prediction-replica -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status statefulset/mongodb -n smart-healthcare --timeout=120s'
                 bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/kafka -n smart-healthcare --timeout=120s'
                 bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/api-gateway -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/auth-service -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/prediction-service -n smart-healthcare --timeout=120s'
+                bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/health-data-service -n smart-healthcare --timeout=120s'
                 bat 'kubectl --kubeconfig=C:\\ProgramData\\Jenkins\\.jenkins\\.kube\\config rollout status deployment/frontend -n smart-healthcare --timeout=120s'
             }
         }
