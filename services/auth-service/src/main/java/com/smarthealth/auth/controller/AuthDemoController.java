@@ -3,8 +3,6 @@ package com.smarthealth.auth.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,7 +25,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth/demo")
-@Tag(name = "Authentication Showcase", description = "Endpoints demonstrating HTTP Basic, Bearer (JWT), API Key, and OAuth 2.0 / Service-to-Service Authentication")
+@Tag(name = "Authentication Showcase", description = "Endpoints demonstrating HTTP Basic, Bearer (JWT), API Key, Admin Key, and OAuth 2.0 / Service-to-Service Authentication")
 public class AuthDemoController {
 
     /**
@@ -127,24 +125,23 @@ public class AuthDemoController {
     }
 
     /**
-     * 4. API Key Authentication Demo
+     * 4. API Key Authentication Demo (Standard or Admin)
      */
     @GetMapping("/api-key")
     @Operation(
             summary = "API Key Authentication Demo",
-            description = "Requires a custom API key header 'X-API-KEY'. Default development key: 'smarthealth-dev-secret-api-key-2026'.",
+            description = "Requires an API key in 'X-API-KEY'. Standard: 'smarthealth-dev-secret-api-key-2026', Admin: 'smarthealth-admin-secret-key-2026'.",
             security = @SecurityRequirement(name = "apiKeyAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully authenticated via API Key"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid API Key"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Invalid API Key")
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid API Key")
     })
     public ResponseEntity<Map<String, Object>> apiKeyDemo(
             @Parameter(
                     name = "X-API-KEY",
                     in = ParameterIn.HEADER,
-                    description = "API Key for client access",
+                    description = "API Key for client access (Standard or Admin)",
                     required = true,
                     example = "smarthealth-dev-secret-api-key-2026"
             )
@@ -159,19 +156,77 @@ public class AuthDemoController {
             ));
         }
 
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+
         Map<String, Object> response = new HashMap<>();
         response.put("status", "SUCCESS");
-        response.put("authenticationType", "API Key");
+        response.put("authenticationType", isAdmin ? "Admin API Key" : "Standard API Key");
         response.put("headerUsed", "X-API-KEY");
         response.put("principal", authentication.getName());
+        response.put("isAdmin", isAdmin);
         response.put("roles", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
-        response.put("message", "API Key validated successfully. Client granted ROLE_API_CLIENT authority.");
+        response.put("message", isAdmin
+                ? "Predefined Admin API Key validated. Client granted high-privilege ROLE_ADMIN."
+                : "Standard API Key validated. Client granted ROLE_API_CLIENT authority.");
         response.put("timestamp", Instant.now().toString());
         return ResponseEntity.ok(response);
     }
 
     /**
-     * 5. OAuth 2.0 & Service-to-Service Information and Demo
+     * 4b. Admin Predefined API Key Demo (Requires Admin Key)
+     */
+    @GetMapping("/admin-api-key")
+    @Operation(
+            summary = "Admin Predefined API Key Demo",
+            description = "Protected administrative endpoint requiring the predefined Admin API Key: 'smarthealth-admin-secret-key-2026'.",
+            security = @SecurityRequirement(name = "apiKeyAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Admin successfully authorized"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid API Key"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Standard API key lacks ROLE_ADMIN privilege")
+    })
+    public ResponseEntity<Map<String, Object>> adminApiKeyDemo(
+            @Parameter(
+                    name = "X-API-KEY",
+                    in = ParameterIn.HEADER,
+                    description = "Predefined Admin API Key",
+                    required = true,
+                    example = "smarthealth-admin-secret-key-2026"
+            )
+            @RequestHeader(value = "X-API-KEY", required = false) String apiKeyHeader,
+            Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "status", "FAILED",
+                    "error", "Unauthorized: Please provide the Admin 'X-API-KEY' header."
+            ));
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+
+        if (!isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", "FORBIDDEN",
+                    "error", "Forbidden: This administrative action requires the predefined Admin API Key."
+            ));
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "SUCCESS");
+        response.put("authenticationType", "Admin API Key");
+        response.put("principal", authentication.getName());
+        response.put("roles", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+        response.put("message", "Access granted! Administrative operations are unlocked for this caller.");
+        response.put("timestamp", Instant.now().toString());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 5. OAuth 2.0 & Service-to-Service Information
      */
     @GetMapping("/oauth-info")
     @Operation(

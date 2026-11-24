@@ -2,17 +2,21 @@
   "info": {
     "_postman_id": "smarthealth-e2e-collection-v1",
     "name": "Smart Healthcare Platform - End-to-End Suite",
-    "description": "Comprehensive test suite covering Auth, Profile, Health Records, ML Predictions, and Go Report Service.",
+    "description": "Comprehensive test suite covering Auth (Basic, Bearer/JWT, API Key, Admin Key, OAuth2), Profile, Health Records, ML Predictions, and Go Report Service.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://127.0.0.1:8080" },
+    { "key": "authUrl", "value": "http://127.0.0.1:8081" },
     { "key": "adminUrl", "value": "http://127.0.0.1:9090" },
     { "key": "eurekaUrl", "value": "http://127.0.0.1:8761" },
     { "key": "goUrl", "value": "http://127.0.0.1:8086" },
     { "key": "mailpitUrl", "value": "http://127.0.0.1:8025" },
     { "key": "patientId", "value": "53ca9f82-1d10-4d0c-b6be-126092d7c169" },
-    { "key": "predictionId", "value": "" }
+    { "key": "predictionId", "value": "" },
+    { "key": "jwtToken", "value": "" },
+    { "key": "apiKey", "value": "smarthealth-dev-secret-api-key-2026" },
+    { "key": "adminApiKey", "value": "smarthealth-admin-secret-key-2026" }
   ],
   "item": [
     {
@@ -79,6 +83,123 @@
               "raw": "{\n  \"email\": \"patient_{{$randomInt}}@smarthealth.local\",\n  \"password\": \"SecurePass123!\"\n}"
             },
             "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Public Demo (No Auth)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{authUrl}}/auth/demo/public", "host": ["{{authUrl}}"], "path": ["auth", "demo", "public"] }
+          }
+        },
+        {
+          "name": "HTTP Basic Auth Demo",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "nikhil.test@smarthealth.io", "type": "string" },
+                { "key": "password", "value": "Password123!", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{authUrl}}/auth/demo/basic", "host": ["{{authUrl}}"], "path": ["auth", "demo", "basic"] }
+          }
+        },
+        {
+          "name": "API Key Auth Demo (Standard Key)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-KEY", "value": "{{apiKey}}" }
+            ],
+            "url": { "raw": "{{authUrl}}/auth/demo/api-key", "host": ["{{authUrl}}"], "path": ["auth", "demo", "api-key"] }
+          }
+        },
+        {
+          "name": "Admin Predefined API Key Demo",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-API-KEY", "value": "{{adminApiKey}}" }
+            ],
+            "url": { "raw": "{{authUrl}}/auth/demo/admin-api-key", "host": ["{{authUrl}}"], "path": ["auth", "demo", "admin-api-key"] }
+          }
+        },
+        {
+          "name": "OAuth2 Client Credentials (Token Exchange via Basic Auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('jwtToken', json.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "prediction-service", "type": "string" },
+                { "key": "password", "value": "nikhil", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials", "type": "text" },
+                { "key": "scope", "value": "prediction.read prediction.write", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{authUrl}}/oauth2/token", "host": ["{{authUrl}}"], "path": ["oauth2", "token"] }
+          }
+        },
+        {
+          "name": "Bearer Token (JWT) Demo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{jwtToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{authUrl}}/auth/demo/bearer-jwt", "host": ["{{authUrl}}"], "path": ["auth", "demo", "bearer-jwt"] }
+          }
+        },
+        {
+          "name": "Service-to-Service Communication Demo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{jwtToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{authUrl}}/auth/demo/service-to-service", "host": ["{{authUrl}}"], "path": ["auth", "demo", "service-to-service"] }
+          }
+        },
+        {
+          "name": "OAuth 2.0 & OIDC Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{authUrl}}/auth/demo/oauth-info", "host": ["{{authUrl}}"], "path": ["auth", "demo", "oauth-info"] }
           }
         }
       ]
@@ -171,7 +292,7 @@
               "script": {
                 "exec": [
                   "var json = pm.response.json();",
-                  "pm.collectionVariables.set('predictionId', json.prediction_id);"
+                  "pm.collectionVariables.set('predictionId', json.prediction_id);\"\n"
                 ],
                 "type": "text/javascript"
               }

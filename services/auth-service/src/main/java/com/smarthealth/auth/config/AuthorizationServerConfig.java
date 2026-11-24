@@ -125,7 +125,7 @@ public class AuthorizationServerConfig {
                                 "/auth/me",
                                 "/me"
                         ).permitAll()
-                        .requestMatchers("/auth/demo/api-key").authenticated()
+                        .requestMatchers("/auth/demo/api-key", "/auth/demo/admin-api-key").authenticated()
                         .requestMatchers("/auth/demo/basic").authenticated()
                         .requestMatchers("/auth/demo/bearer-jwt").authenticated()
                         .requestMatchers("/auth/demo/service-to-service").authenticated()

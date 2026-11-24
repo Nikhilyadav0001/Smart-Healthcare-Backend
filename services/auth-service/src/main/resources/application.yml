@@ -108,6 +108,7 @@ springdoc:
 
 auth:
   api-key: ${AUTH_API_KEY:smarthealth-dev-secret-api-key-2026}
+  admin-api-key: ${AUTH_ADMIN_API_KEY:smarthealth-admin-secret-key-2026}
   security:
     max-failed-attempts: 5
     lock-duration-minutes: 15

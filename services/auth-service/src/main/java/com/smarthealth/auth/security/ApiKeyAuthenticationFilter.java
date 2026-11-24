@@ -15,8 +15,8 @@ import java.util.List;
 
 /**
  * Filter that intercepts requests containing the 'X-API-KEY' header.
- * If the key matches the configured valid key, an authenticated ApiKeyAuthenticationToken is
- * set in the Spring SecurityContext with 'ROLE_API_CLIENT'.
+ * - If matches 'auth.admin-api-key', authenticates as 'admin-user' with 'ROLE_ADMIN' and 'ROLE_API_CLIENT'.
+ * - If matches 'auth.api-key', authenticates as 'api-client' with 'ROLE_API_CLIENT'.
  */
 @Component
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
@@ -26,6 +26,9 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     @Value("${auth.api-key:smarthealth-dev-secret-api-key-2026}")
     private String validApiKey;
 
+    @Value("${auth.admin-api-key:smarthealth-admin-secret-key-2026}")
+    private String adminApiKey;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -34,10 +37,25 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         String apiKey = request.getHeader(API_KEY_HEADER);
 
         if (apiKey != null && !apiKey.isBlank()) {
-            if (validApiKey.equals(apiKey.trim())) {
+            String trimmedKey = apiKey.trim();
+            if (adminApiKey != null && adminApiKey.equals(trimmedKey)) {
+                // Predefined Admin API Key
+                ApiKeyAuthenticationToken authentication = new ApiKeyAuthenticationToken(
+                        "admin-user",
+                        trimmedKey,
+                        List.of(
+                                new SimpleGrantedAuthority("ROLE_ADMIN"),
+                                new SimpleGrantedAuthority("ROLE_API_CLIENT"),
+                                new SimpleGrantedAuthority("ROLE_USER"),
+                                new SimpleGrantedAuthority("ROLE_SERVICE")
+                        )
+                );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else if (validApiKey != null && validApiKey.equals(trimmedKey)) {
+                // Standard Client API Key
                 ApiKeyAuthenticationToken authentication = new ApiKeyAuthenticationToken(
                         "api-client",
-                        apiKey,
+                        trimmedKey,
                         List.of(
                                 new SimpleGrantedAuthority("ROLE_API_CLIENT"),
                                 new SimpleGrantedAuthority("ROLE_SERVICE")

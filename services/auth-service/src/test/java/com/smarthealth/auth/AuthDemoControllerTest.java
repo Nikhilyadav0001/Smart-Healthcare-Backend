@@ -49,7 +49,7 @@ class AuthDemoControllerTest {
     }
 
     @Test
-    void testApiKey_Authenticated() {
+    void testApiKey_Standard_Authenticated() {
         ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
                 "api-client",
                 "test-api-key",
@@ -58,8 +58,52 @@ class AuthDemoControllerTest {
 
         ResponseEntity<Map<String, Object>> resp = controller.apiKeyDemo("test-api-key", auth);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
-        assertEquals("API Key", resp.getBody().get("authenticationType"));
+        assertEquals("Standard API Key", resp.getBody().get("authenticationType"));
         assertEquals("api-client", resp.getBody().get("principal"));
+        assertEquals(false, resp.getBody().get("isAdmin"));
+    }
+
+    @Test
+    void testApiKey_Admin_Authenticated() {
+        ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
+                "admin-user",
+                "test-admin-key",
+                List.of(
+                        new SimpleGrantedAuthority("ROLE_ADMIN"),
+                        new SimpleGrantedAuthority("ROLE_API_CLIENT")
+                )
+        );
+
+        ResponseEntity<Map<String, Object>> resp = controller.apiKeyDemo("test-admin-key", auth);
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals("Admin API Key", resp.getBody().get("authenticationType"));
+        assertEquals("admin-user", resp.getBody().get("principal"));
+        assertEquals(true, resp.getBody().get("isAdmin"));
+    }
+
+    @Test
+    void testAdminApiKeyEndpoint_Success() {
+        ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
+                "admin-user",
+                "test-admin-key",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+        );
+
+        ResponseEntity<Map<String, Object>> resp = controller.adminApiKeyDemo("test-admin-key", auth);
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals("Admin API Key", resp.getBody().get("authenticationType"));
+    }
+
+    @Test
+    void testAdminApiKeyEndpoint_ForbiddenForStandardUser() {
+        ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
+                "api-client",
+                "test-api-key",
+                List.of(new SimpleGrantedAuthority("ROLE_API_CLIENT"))
+        );
+
+        ResponseEntity<Map<String, Object>> resp = controller.adminApiKeyDemo("test-api-key", auth);
+        assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
     }
 
     @Test
