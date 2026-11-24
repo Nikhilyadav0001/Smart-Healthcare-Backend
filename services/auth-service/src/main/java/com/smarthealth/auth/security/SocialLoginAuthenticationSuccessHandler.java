@@ -35,7 +35,8 @@ public class SocialLoginAuthenticationSuccessHandler
             AuthUserDetailsService authUserDetailsService) {
         this.socialLoginService = socialLoginService;
         this.authUserDetailsService = authUserDetailsService;
-        setDefaultTargetUrl("http://localhost:5173/");
+        setDefaultTargetUrl("/");
+        setAlwaysUseDefaultTargetUrl(true);
     }
 
     @Override
