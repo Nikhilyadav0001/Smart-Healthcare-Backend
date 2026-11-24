@@ -52,6 +52,9 @@ spec:
             - name: swagger-html
               mountPath: /usr/share/nginx/html/swagger.html
               subPath: swagger.html
+            - name: openapi-json
+              mountPath: /usr/share/nginx/html/openapi.json
+              subPath: openapi.json
       volumes:
         - name: nginx-conf
           configMap:
@@ -59,6 +62,9 @@ spec:
         - name: swagger-html
           configMap:
             name: frontend-swagger-html
+        - name: openapi-json
+          configMap:
+            name: frontend-openapi-json
 ---
 apiVersion: v1
 kind: Service
