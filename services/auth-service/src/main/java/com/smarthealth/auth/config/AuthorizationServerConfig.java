@@ -125,6 +125,7 @@ public class AuthorizationServerConfig {
                                 "/auth/me",
                                 "/me"
                         ).permitAll()
+                        .requestMatchers("/auth/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/auth/demo/api-key", "/auth/demo/admin-api-key").authenticated()
                         .requestMatchers("/auth/demo/basic").authenticated()
                         .requestMatchers("/auth/demo/bearer-jwt").authenticated()
@@ -143,7 +144,7 @@ public class AuthorizationServerConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                request -> request.getRequestURI() != null && request.getRequestURI().startsWith("/auth/demo")
+                                request -> request.getRequestURI() != null && (request.getRequestURI().startsWith("/auth/demo") || request.getRequestURI().startsWith("/auth/admin"))
                         )
                 )
                 .formLogin(form ->
@@ -252,12 +253,12 @@ public class AuthorizationServerConfig {
                                     TokenSettings.builder()
                                              .accessTokenTimeToLive(
                                                     Duration.ofMinutes(15)
-                                            )
-                                            .refreshTokenTimeToLive(
+                                             )
+                                             .refreshTokenTimeToLive(
                                                     Duration.ofDays(7)
-                                            )
-                                            .reuseRefreshTokens(false)
-                                            .build()
+                                             )
+                                             .reuseRefreshTokens(false)
+                                             .build()
                             )
                             .build();
             repository.save(bffClient);
