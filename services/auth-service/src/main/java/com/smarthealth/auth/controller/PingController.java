@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/ping")
-@Tag(name = "Ping", description = "Template endpoint that proves Swagger works")
+@Tag(name = "Service Diagnostics", description = "Service liveness and health diagnostics")
 public class PingController {
 
     private static final Logger log = LoggerFactory.getLogger(PingController.class);
     private final String appName;
 
-    public PingController(@Value("${spring.application.name}") String appName) {
+    public PingController(@Value("${spring.application.name:auth-service}") String appName) {
         this.appName = appName;
     }
 
