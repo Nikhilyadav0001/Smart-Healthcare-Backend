@@ -698,6 +698,7 @@ spec:
   type: LoadBalancer
   selector:
     app: mongodb
+    statefulset.kubernetes.io/pod-name: mongodb-0
   ports:
     - name: mongodb
       port: 27018
