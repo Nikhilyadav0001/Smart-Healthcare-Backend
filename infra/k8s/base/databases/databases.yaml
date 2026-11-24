@@ -594,6 +594,9 @@ spec:
       containers:
         - name: mailpit
           image: axllent/mailpit:latest
+          env:
+            - name: MP_WEBROOT
+              value: mailpit
           ports:
             - containerPort: 1025
             - containerPort: 8025
