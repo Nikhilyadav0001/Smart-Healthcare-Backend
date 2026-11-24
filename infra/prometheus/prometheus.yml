@@ -54,3 +54,25 @@ scrape_configs:
       - targets: [ "host.docker.internal:8888" ]
         labels:
           service: config-server
+
+  # Database Exporters (Option B: DB Replication Lag & Health Metrics)
+  - job_name: db-postgres-exporter
+    static_configs:
+      - targets: ["host.docker.internal:9187"]
+        labels:
+          database: postgresql
+          service: auth_db-prediction_db
+
+  - job_name: db-mariadb-exporter
+    static_configs:
+      - targets: ["host.docker.internal:9104"]
+        labels:
+          database: mariadb
+          service: user-profile-db
+
+  - job_name: db-mongodb-exporter
+    static_configs:
+      - targets: ["host.docker.internal:9216"]
+        labels:
+          database: mongodb
+          service: health-data-db

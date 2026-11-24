@@ -1,4 +1,3 @@
-
 name: smart-healthcare-observability
 
 services:
@@ -27,7 +26,6 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ../grafana/provisioning:/etc/grafana/provisioning:ro
-
 
   alloy:
     image: grafana/alloy:v1.5.1
@@ -70,6 +68,42 @@ services:
     volumes:
       - ../prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Option B: Database Exporters for Ping, Health & Replication Lag
+  postgres-exporter:
+    image: prometheus-community/postgres-exporter:v0.16.0
+    container_name: postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:nikhil@host.docker.internal:5433/postgres?sslmode=disable"
+    ports:
+      - "127.0.0.1:9187:9187"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mariadb-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: mariadb-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "root:nikhil@(host.docker.internal:3308)/"
+    ports:
+      - "127.0.0.1:9104:9104"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.40.0
+    container_name: mongodb-exporter
+    restart: unless-stopped
+    command:
+      - --mongodb.uri=mongodb://host.docker.internal:27117/?directConnection=true
+      - --compatible-mode
+      - --collect-all
+    ports:
+      - "127.0.0.1:9216:9216"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "smarthealth-e2e-collection-v1",
-    "name": "Smart Healthcare Platform - End-to-End Suite",
-    "description": "Comprehensive test suite covering Auth (Basic, Bearer/JWT, API Key, Admin Key, OAuth2), Profile, Health Records, ML Predictions, and Go Report Service.",
+    "name": "Smart health care",
+    "description": "Comprehensive test suite covering Service Template, User Profile Service, Auth Service (Basic, Bearer/JWT, API Key, Admin Key, OAuth2), Health Records, ML Predictions, Go Report Service, and DB Replication / Observability.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -20,44 +20,56 @@
   ],
   "item": [
     {
-      "name": "1. Infrastructure",
+      "name": "Service Template",
       "item": [
         {
-          "name": "Gateway Health",
+          "name": "Service Template Ping",
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/actuator/health", "host": ["{{baseUrl}}"], "path": ["actuator", "health"] }
-          }
-        },
-        {
-          "name": "Eureka Registry",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{eurekaUrl}}/eureka/apps", "host": ["{{eurekaUrl}}"], "path": ["eureka", "apps"] }
-          }
-        },
-        {
-          "name": "Admin Server Instances",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": { "raw": "{{adminUrl}}/instances", "host": ["{{adminUrl}}"], "path": ["instances"] }
-          }
-        },
-        {
-          "name": "Go Microservice Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": { "raw": "{{goUrl}}/healthz", "host": ["{{goUrl}}"], "path": ["healthz"] }
+            "url": { "raw": "{{baseUrl}}/service-template/ping", "host": ["{{baseUrl}}"], "path": ["service-template", "ping"] }
           }
         }
       ]
     },
     {
-      "name": "2. Authentication",
+      "name": "user-profile-service",
+      "item": [
+        {
+          "name": "Profile Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/ping", "host": ["{{baseUrl}}"], "path": ["api", "users", "ping"] }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Dev-User-Id", "value": "{{patientId}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Dev-User-Id", "value": "{{patientId}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dr. Alex Mercer\",\n  \"dateOfBirth\": \"1985-06-12\",\n  \"gender\": \"MALE\",\n  \"phone\": \"+1-555-0144\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "auth service",
       "item": [
         {
           "name": "Register Patient Account",
@@ -201,39 +213,27 @@
             "header": [],
             "url": { "raw": "{{authUrl}}/auth/demo/oauth-info", "host": ["{{authUrl}}"], "path": ["auth", "demo", "oauth-info"] }
           }
-        }
-      ]
-    },
-    {
-      "name": "3. User Profile",
-      "item": [
+        },
         {
-          "name": "Update Profile",
+          "name": "Current User",
           "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-Dev-User-Id", "value": "{{patientId}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Dr. Alex Mercer\",\n  \"dateOfBirth\": \"1985-06-12\",\n  \"gender\": \"MALE\",\n  \"phone\": \"+1-555-0144\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/me", "host": ["{{baseUrl}}"], "path": ["api", "me"] }
           }
         },
         {
-          "name": "Get Profile",
+          "name": "Dev Tokens",
           "request": {
             "method": "GET",
-            "header": [{ "key": "X-Dev-User-Id", "value": "{{patientId}}" }],
-            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/dev/tokens", "host": ["{{baseUrl}}"], "path": ["dev", "tokens"] }
           }
         }
       ]
     },
     {
-      "name": "4. Health Data",
+      "name": "health-data-service",
       "item": [
         {
           "name": "Health Ping",
@@ -274,7 +274,7 @@
       ]
     },
     {
-      "name": "5. ML Predictions & Reports",
+      "name": "prediction-service",
       "item": [
         {
           "name": "Get Models",
@@ -292,7 +292,7 @@
               "script": {
                 "exec": [
                   "var json = pm.response.json();",
-                  "pm.collectionVariables.set('predictionId', json.prediction_id);\"\n"
+                  "pm.collectionVariables.set('predictionId', json.prediction_id);"
                 ],
                 "type": "text/javascript"
               }
@@ -307,6 +307,19 @@
             },
             "url": { "raw": "{{baseUrl}}/api/predictions/predict/all", "host": ["{{baseUrl}}"], "path": ["api", "predictions", "predict", "all"] }
           }
+        }
+      ]
+    },
+    {
+      "name": "go-service",
+      "item": [
+        {
+          "name": "Go Microservice Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{goUrl}}/healthz", "host": ["{{goUrl}}"], "path": ["healthz"] }
+          }
         },
         {
           "name": "Download PDF Report (Go gRPC)",
@@ -314,6 +327,75 @@
             "method": "GET",
             "header": [{ "key": "Accept", "value": "application/pdf" }],
             "url": { "raw": "{{baseUrl}}/api/predictions/{{predictionId}}/report", "host": ["{{baseUrl}}"], "path": ["api", "predictions", "{{predictionId}}", "report"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure & Observability",
+      "item": [
+        {
+          "name": "Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/actuator/health", "host": ["{{baseUrl}}"], "path": ["actuator", "health"] }
+          }
+        },
+        {
+          "name": "Eureka Registry",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{eurekaUrl}}/eureka/apps", "host": ["{{eurekaUrl}}"], "path": ["eureka", "apps"] }
+          }
+        },
+        {
+          "name": "Admin Server Instances",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{adminUrl}}/instances", "host": ["{{adminUrl}}"], "path": ["instances"] }
+          }
+        },
+        {
+          "name": "Prometheus Scrape Targets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://127.0.0.1:9091/api/v1/targets", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "9091", "path": ["api", "v1", "targets"] }
+          }
+        },
+        {
+          "name": "Grafana Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://127.0.0.1:3000/api/health", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "3000", "path": ["api", "health"] }
+          }
+        },
+        {
+          "name": "DB Exporter - PostgreSQL Metrics & Lag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://127.0.0.1:9187/metrics", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "9187", "path": ["metrics"] }
+          }
+        },
+        {
+          "name": "DB Exporter - MariaDB Metrics & Lag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://127.0.0.1:9104/metrics", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "9104", "path": ["metrics"] }
+          }
+        },
+        {
+          "name": "DB Exporter - MongoDB Replica Set Metrics & Lag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "http://127.0.0.1:9216/metrics", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "9216", "path": ["metrics"] }
           }
         }
       ]
