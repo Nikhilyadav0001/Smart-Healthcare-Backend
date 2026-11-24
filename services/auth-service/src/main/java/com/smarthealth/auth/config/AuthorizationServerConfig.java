@@ -6,6 +6,7 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import org.springframework.security.jackson.SecurityJacksonModules;
 
+import com.smarthealth.auth.security.ApiKeyAuthenticationFilter;
 import com.smarthealth.auth.security.GitHubOAuth2UserService;
 import com.smarthealth.auth.security.LoginFailureHandler;
 import com.smarthealth.auth.security.LoginSuccessHandler;
@@ -44,6 +45,9 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpStatus;
 
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -93,11 +97,13 @@ public class AuthorizationServerConfig {
             LoginSuccessHandler loginSuccessHandler,
             LoginFailureHandler loginFailureHandler,
             GitHubOAuth2UserService gitHubOAuth2UserService,
-            SocialLoginAuthenticationSuccessHandler socialLoginAuthenticationSuccessHandler)
+            SocialLoginAuthenticationSuccessHandler socialLoginAuthenticationSuccessHandler,
+            ApiKeyAuthenticationFilter apiKeyAuthenticationFilter)
             throws Exception {
 
         http
                 .authenticationProvider(authenticationProvider)
+                .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/login",
@@ -112,14 +118,32 @@ public class AuthorizationServerConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/auth/**"
+                                "/auth/register",
+                                "/auth/verify-email",
+                                "/auth/demo/public",
+                                "/auth/demo/oauth-info",
+                                "/auth/me",
+                                "/me"
                         ).permitAll()
+                        .requestMatchers("/auth/demo/api-key").authenticated()
+                        .requestMatchers("/auth/demo/basic").authenticated()
+                        .requestMatchers("/auth/demo/bearer-jwt").authenticated()
+                        .requestMatchers("/auth/demo/service-to-service").authenticated()
+                        .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf ->
                         csrf.ignoringRequestMatchers(
                                 "/auth/**",
                                 "/logout"
+                        )
+                )
+                .httpBasic(Customizer.withDefaults())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .exceptionHandling(exceptions -> exceptions
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                request -> request.getRequestURI() != null && request.getRequestURI().startsWith("/auth/demo")
                         )
                 )
                 .formLogin(form ->
@@ -236,11 +260,9 @@ public class AuthorizationServerConfig {
                                             .build()
                             )
                             .build();
-
             repository.save(bffClient);
 
         } else {
-
             RegisteredClient synchronizedClient =
                     RegisteredClient.from(existingClient)
                             .clientSecret(
