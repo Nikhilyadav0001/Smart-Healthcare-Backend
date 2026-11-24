@@ -193,11 +193,19 @@ public class SocialLoginService {
         // verificationToken is null.
         // ------------------------------------------------------------
 
+        String userEmail = savedUser.getEmail() != null ? savedUser.getEmail() : "";
+        String fullName = userEmail.contains("@") ? userEmail.split("@")[0] : "Social User";
+
         UserRegisteredEvent event =
                 new UserRegisteredEvent(
-                        savedUser.getId(),
-                        savedUser.getEmail(),
-                        null
+                        UUID.randomUUID().toString(),
+                        1,
+                        now.toString(),
+                        savedUser.getId().toString(),
+                        userEmail,
+                        fullName,
+                        "PATIENT",
+                        "https://smarthealthcare.dpdns.org"
                 );
 
         String payload = serializeEvent(event);

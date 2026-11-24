@@ -20,6 +20,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -71,6 +72,7 @@ public class AuthorizationServerConfig {
                 new OAuth2AuthorizationServerConfigurer();
 
         http
+                .cors(Customizer.withDefaults())
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, authorizationServer ->
                         authorizationServer
@@ -104,10 +106,12 @@ public class AuthorizationServerConfig {
             throws Exception {
 
         http
+                .cors(Customizer.withDefaults())
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
+                                "/error",
                                 "/login",
                                 "/logout",
                                 "/css/**",
@@ -141,10 +145,20 @@ public class AuthorizationServerConfig {
                                 "/logout"
                         )
                 )
-                .httpBasic(basic -> basic.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                request -> {
+                                    String accept = request.getHeader("Accept");
+                                    String auth = request.getHeader("Authorization");
+                                    return (auth != null && !auth.isBlank())
+                                            || (accept != null && accept.contains("application/json"))
+                                            || request.getRequestURI().startsWith("/auth/demo/");
+                                }
+                        )
+                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 )
                 .formLogin(form ->
                         form
@@ -160,7 +174,7 @@ public class AuthorizationServerConfig {
                                         userInfo
                                                 .userService(gitHubOAuth2UserService)
                                                 .oidcUserService(new OidcUserService())
-                                )
+                                 )
                                 .successHandler(
                                         socialLoginAuthenticationSuccessHandler
                                 )
@@ -450,5 +464,17 @@ public class AuthorizationServerConfig {
                 }
             }
         };
+    }
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
+        config.setAllowedOriginPatterns(java.util.List.of("*"));
+        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+        config.setAllowedHeaders(java.util.List.of("*"));
+        config.setExposedHeaders(java.util.List.of("Authorization", "Link", "X-Total-Count"));
+        config.setAllowCredentials(true);
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

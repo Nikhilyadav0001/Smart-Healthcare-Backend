@@ -55,12 +55,6 @@ public class EmailVerificationService {
             );
         }
 
-        if (verificationToken.getUsedAt() != null) {
-            throw new IllegalArgumentException(
-                    "Verification token has already been used"
-            );
-        }
-
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
         if (!verificationToken.getExpiresAt().isAfter(now)) {
@@ -76,12 +70,21 @@ public class EmailVerificationService {
                         ));
 
         if (user.isEmailVerified()) {
-            verificationToken.setUsedAt(now);
+            if (verificationToken.getUsedAt() == null) {
+                verificationToken.setUsedAt(now);
+                verificationTokenRepository.save(verificationToken);
+            }
             return new VerifyEmailResponse(
                     user.getId(),
                     user.getEmail(),
                     user.getStatus(),
                     true
+            );
+        }
+
+        if (verificationToken.getUsedAt() != null) {
+            throw new IllegalArgumentException(
+                    "Verification token has already been used"
             );
         }
 
@@ -102,23 +105,13 @@ public class EmailVerificationService {
         );
     }
 
-    private String sha256(String value) {
+    private String sha256(String raw) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-
-            byte[] hash = digest.digest(
-                    value.getBytes(StandardCharsets.UTF_8)
-            );
-
-            return Base64.getUrlEncoder()
-                    .withoutPadding()
-                    .encodeToString(hash);
-
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException(
-                    "SHA-256 algorithm is not available",
-                    exception
-            );
+            byte[] hash = digest.digest(raw.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 algorithm not available", ex);
         }
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import com.smarthealth.auth.kafka.OutboxPublisher;
 
 @SpringBootTest(properties = {
     "spring.cloud.config.enabled=false",
@@ -45,6 +46,9 @@ class AuthServiceApplicationTests {
 
 	@MockitoBean
 	private Flyway flyway;
+
+	@MockitoBean
+	private OutboxPublisher outboxPublisher;
 
 	@BeforeAll
 	static void setup() {

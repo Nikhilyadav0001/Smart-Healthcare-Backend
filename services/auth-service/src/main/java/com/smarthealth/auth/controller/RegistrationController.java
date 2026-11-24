@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,12 +62,45 @@ public class RegistrationController {
             @ApiResponse(responseCode = "200", description = "Email successfully verified"),
             @ApiResponse(responseCode = "400", description = "Invalid or expired verification token")
     })
-    public ResponseEntity<VerifyEmailResponse> verifyEmail(
+    public ResponseEntity<?> verifyEmail(
             @Parameter(description = "Verification token sent to user's email", required = true)
-            @RequestParam String token) {
+            @RequestParam String token,
+            @RequestHeader(value = "Accept", required = false) String acceptHeader) {
 
         VerifyEmailResponse response =
                 emailVerificationService.verify(token);
+
+        if (acceptHeader != null && acceptHeader.contains("text/html")) {
+            String html = """
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Account Verified - Smart Healthcare</title>
+                        <meta http-equiv="refresh" content="3;url=/?verified=true" />
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>
+                            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #f8fafc; color: #1e293b; }
+                            .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); text-align: center; max-width: 440px; border: 1px solid #e2e8f0; }
+                            .icon { font-size: 44px; margin-bottom: 16px; color: #10b981; }
+                            h2 { margin: 0 0 10px; font-size: 22px; font-weight: 700; }
+                            p { color: #64748b; font-size: 14px; margin: 0 0 24px; line-height: 1.5; }
+                            a { display: inline-block; background: #0f766e; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+                            a:hover { background: #115e59; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="card">
+                            <div class="icon">&#10004;</div>
+                            <h2>Email Verified Successfully!</h2>
+                            <p>Your account for <strong>%s</strong> has been verified. Redirecting you to sign in...</p>
+                            <a href="/?verified=true">Proceed to Sign In</a>
+                        </div>
+                    </body>
+                    </html>
+                    """.formatted(response.email());
+            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(html);
+        }
 
         return ResponseEntity.ok(response);
     }

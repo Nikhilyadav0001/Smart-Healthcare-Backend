@@ -43,6 +43,9 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:19092}
     template:
       observation-enabled: true
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
       properties:
         spring.json.add.type.headers: false
@@ -100,18 +103,20 @@ management:
       enabled: true
     os:
       enabled: true
-    process:
-      enabled: true
-
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-  api-docs:
-    path: /v3/api-docs
+  metrics:
+    export:
+      otlp:
+        enabled: ${MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED:false}
+  otlp:
+    tracing:
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+    logging:
+      endpoint: ${MANAGEMENT_OTLP_LOGGING_ENDPOINT:http://localhost:4318/v1/logs}
 
 auth:
-  api-key: ${AUTH_API_KEY:smarthealth-dev-secret-api-key-2026}
-  admin-api-key: ${AUTH_ADMIN_API_KEY:smarthealth-admin-secret-key-2026}
-  security:
-    max-failed-attempts: 5
-    lock-duration-minutes: 15
+  jwt:
+    private-key-path: ${JWT_PRIVATE_KEY_PATH:keys/private.pem}
+    public-key-path: ${JWT_PUBLIC_KEY_PATH:keys/public.pem}
+    key-id: ${JWT_KEY_ID:smarthealth-auth-key-1}
+  registration:
+    auto-verify-email: ${AUTO_VERIFY_EMAIL:false}

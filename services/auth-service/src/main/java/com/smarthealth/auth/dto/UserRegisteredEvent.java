@@ -1,10 +1,13 @@
 package com.smarthealth.auth.dto;
 
-import java.util.UUID;
-
 public record UserRegisteredEvent(
-        UUID userId,
+        String eventId,
+        int schemaVersion,
+        String occurredAt,
+        String userId,
         String email,
-        String verificationToken
+        String fullName,
+        String role,
+        String verificationUrl
 ) {
 }

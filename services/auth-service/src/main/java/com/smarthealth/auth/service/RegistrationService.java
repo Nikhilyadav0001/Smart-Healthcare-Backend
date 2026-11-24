@@ -11,6 +11,7 @@ import com.smarthealth.auth.repository.OutboxEventRepository;
 import com.smarthealth.auth.repository.UserRepository;
 import com.smarthealth.auth.repository.UserRoleRepository;
 import com.smarthealth.auth.repository.VerificationTokenRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ public class RegistrationService {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
     private final SecureRandom secureRandom;
+    private final String verificationBaseUrl;
 
     public RegistrationService(
             UserRepository userRepository,
@@ -49,7 +51,8 @@ public class RegistrationService {
             VerificationTokenRepository verificationTokenRepository,
             OutboxEventRepository outboxEventRepository,
             PasswordEncoder passwordEncoder,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            @Value("${app.auth.verification-base-url:https://smarthealthcare.dpdns.org/auth/verify-email?token=}") String verificationBaseUrl) {
 
         this.userRepository = userRepository;
         this.userRoleRepository = userRoleRepository;
@@ -58,6 +61,7 @@ public class RegistrationService {
         this.passwordEncoder = passwordEncoder;
         this.objectMapper = objectMapper;
         this.secureRandom = new SecureRandom();
+        this.verificationBaseUrl = verificationBaseUrl;
     }
 
     @Transactional
@@ -91,16 +95,17 @@ public class RegistrationService {
         User savedUser = userRepository.save(user);
 
         // ------------------------------------------------------------
-        // 2. Assign the default USER role
+        // 2. Assign security roles
         // ------------------------------------------------------------
 
-        UserRole.UserRoleId roleId =
-                new UserRole.UserRoleId(
-                        savedUser.getId(),
-                        "USER"
-                );
+        String userRole = "PATIENT";
+        if (request.role() != null && "DOCTOR".equalsIgnoreCase(request.role().trim())) {
+            userRole = "DOCTOR";
+        }
 
-        userRoleRepository.save(new UserRole(roleId));
+        userRoleRepository.save(new UserRole(new UserRole.UserRoleId(savedUser.getId(), "USER")));
+        userRoleRepository.save(new UserRole(new UserRole.UserRoleId(savedUser.getId(), userRole)));
+
         // ------------------------------------------------------------
         // 3. Generate a cryptographically secure verification token
         // ------------------------------------------------------------
@@ -125,10 +130,21 @@ public class RegistrationService {
         // 4. Build the user.registered event
         // ------------------------------------------------------------
 
+        String fullName = (request.fullName() != null && !request.fullName().isBlank())
+                ? request.fullName().trim()
+                : email.split("@")[0];
+
+        String verificationUrl = verificationBaseUrl + rawVerificationToken;
+
         UserRegisteredEvent event = new UserRegisteredEvent(
-                savedUser.getId(),
+                UUID.randomUUID().toString(),
+                1,
+                now.toString(),
+                savedUser.getId().toString(),
                 savedUser.getEmail(),
-                rawVerificationToken
+                fullName,
+                userRole,
+                verificationUrl
         );
 
         String payload = serializeEvent(event);

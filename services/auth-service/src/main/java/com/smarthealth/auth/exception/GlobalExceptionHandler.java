@@ -2,6 +2,7 @@ package com.smarthealth.auth.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -49,6 +50,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(body);
     }
 
@@ -61,6 +63,7 @@ public class GlobalExceptionHandler {
                 exception.getMessage()
         );
     }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(
             IllegalArgumentException exception) {
@@ -83,6 +86,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(status)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(body);
     }
 }

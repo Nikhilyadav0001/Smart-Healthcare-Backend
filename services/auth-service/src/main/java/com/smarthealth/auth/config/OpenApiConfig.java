@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.security.OAuthFlow;
 import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +23,12 @@ public class OpenApiConfig {
     @Bean
     OpenAPI openAPI(@Value("${spring.application.name:auth-service}") String appName) {
         return new OpenAPI()
+                .servers(List.of(
+                        new Server().url("/swagger/auth").description("Through Frontend / Gateway Proxy (/swagger/auth)"),
+                        new Server().url("/").description("Current Origin / Relative (/)"),
+                        new Server().url("https://smarthealthcare.dpdns.org/swagger/auth").description("Public HTTPS (Domain)"),
+                        new Server().url("http://localhost:8081").description("Local Direct Service (localhost:8081)")
+                ))
                 .info(new Info()
                         .title("Smart Healthcare Platform - Auth & Identity Service API")
                         .version("v1.0.0")
