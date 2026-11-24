@@ -567,9 +567,9 @@ spec:
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: "http://discovery-server:8761/eureka/"
             - name: MONGODB_URI
-              value: "mongodb://mongodb-0.mongodb-headless:27017,mongodb-1.mongodb-headless:27017/health_data_db?replicaSet=rs0"
+              value: "mongodb://mongodb-0.mongodb-headless:27017,mongodb-1.mongodb-headless:27017,mongodb-2.mongodb-headless:27017/health_data_db?replicaSet=rs0&readPreference=secondaryPreferred"
             - name: SPRING_DATA_MONGODB_URI
-              value: "mongodb://mongodb-0.mongodb-headless:27017,mongodb-1.mongodb-headless:27017/health_data_db?replicaSet=rs0"
+              value: "mongodb://mongodb-0.mongodb-headless:27017,mongodb-1.mongodb-headless:27017,mongodb-2.mongodb-headless:27017/health_data_db?replicaSet=rs0&readPreference=secondaryPreferred"
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
             - name: REDIS_PORT

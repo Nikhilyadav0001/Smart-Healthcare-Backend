@@ -15,7 +15,7 @@ data:
   PROFILE_DB_PORT: "3306"
   PREDICTION_DB_HOST: "postgres-prediction"
   PREDICTION_DB_PORT: "5432"
-  MONGODB_URI: "mongodb://mongodb-0.mongodb-headless:27017,mongodb-1.mongodb-headless:27017/health_data_db?replicaSet=rs0"
+  MONGODB_URI: "mongodb://mongodb-0.mongodb-headless:27017,mongodb-1.mongodb-headless:27017,mongodb-2.mongodb-headless:27017/health_data_db?replicaSet=rs0&readPreference=secondaryPreferred"
   REDIS_HOST: "redis"
   REDIS_PORT: "6379"
   KAFKA_BROKERS: "kafka:9092"
