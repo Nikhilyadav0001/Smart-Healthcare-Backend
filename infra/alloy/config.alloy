@@ -15,6 +15,8 @@ otelcol.processor.transform "default" {
     context = "log"
     statements = [
       "set(attributes[\"level\"], severity_text) where attributes[\"level\"] == nil",
+      "set(attributes[\"pod\"], resource.attributes[\"k8s.pod.name\"]) where resource.attributes[\"k8s.pod.name\"] != nil",
+      "set(attributes[\"instance\"], resource.attributes[\"service.instance.id\"]) where resource.attributes[\"service.instance.id\"] != nil",
     ]
   }
 

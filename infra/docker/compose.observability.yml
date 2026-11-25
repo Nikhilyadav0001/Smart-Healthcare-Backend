@@ -71,15 +71,48 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # Option B: Database Exporters for Ping, Health & Replication Lag
-  postgres-exporter:
-    image: prometheus-community/postgres-exporter:v0.16.0
-    container_name: postgres-exporter
+  # Database Exporters for Ping, Health & Replication Metrics
+  postgres-auth-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: postgres-auth-exporter
     restart: unless-stopped
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:nikhil@host.docker.internal:5433/postgres?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:nikhil@host.docker.internal:5433/auth_db?sslmode=disable"
     ports:
       - "127.0.0.1:9187:9187"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  postgres-auth-replica-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: postgres-auth-replica-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:nikhil@host.docker.internal:5434/auth_db?sslmode=disable"
+    ports:
+      - "127.0.0.1:9188:9187"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  postgres-prediction-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: postgres-prediction-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:nikhil@host.docker.internal:5435/prediction_db?sslmode=disable"
+    ports:
+      - "127.0.0.1:9189:9187"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  postgres-prediction-replica-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: postgres-prediction-replica-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:nikhil@host.docker.internal:5436/prediction_db?sslmode=disable"
+    ports:
+      - "127.0.0.1:9190:9187"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -87,8 +120,11 @@ services:
     image: prom/mysqld-exporter:v0.15.1
     container_name: mariadb-exporter
     restart: unless-stopped
+    command:
+      - --mysqld.address=host.docker.internal:3308
+      - --mysqld.username=root
     environment:
-      DATA_SOURCE_NAME: "root:nikhil@(host.docker.internal:3308)/"
+      MYSQLD_EXPORTER_PASSWORD: "nikhil"
     ports:
       - "127.0.0.1:9104:9104"
     extra_hosts:
@@ -99,7 +135,7 @@ services:
     container_name: mongodb-exporter
     restart: unless-stopped
     command:
-      - --mongodb.uri=mongodb://host.docker.internal:27117/?directConnection=true
+      - --mongodb.uri=mongodb://host.docker.internal:27018/?directConnection=true
       - --compatible-mode
       - --collect-all
     ports:

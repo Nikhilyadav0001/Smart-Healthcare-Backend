@@ -18,16 +18,16 @@ scrape_configs:
       - targets: ["host.docker.internal:9090"]
         labels:
           service: admin-server
-      - targets: [ "host.docker.internal:8081" ]
+      - targets: ["host.docker.internal:8081"]
         labels:
           service: auth-service
-      - targets: [ "host.docker.internal:8082" ]
+      - targets: ["host.docker.internal:8082"]
         labels:
           service: user-profile-service
-      - targets: [ "host.docker.internal:8083" ]
+      - targets: ["host.docker.internal:8083"]
         labels:
           service: health-data-service
-      - targets: [ "host.docker.internal:8085" ]
+      - targets: ["host.docker.internal:8085"]
         labels:
           service: prediction-service
 
@@ -51,28 +51,46 @@ scrape_configs:
       username: config
       password: dev-config-pass
     static_configs:
-      - targets: [ "host.docker.internal:8888" ]
+      - targets: ["host.docker.internal:8888"]
         labels:
           service: config-server
 
-  # Database Exporters (Option B: DB Replication Lag & Health Metrics)
+  # Database Exporters (Ping, Health & Replication Lag across Primary & Replicas)
   - job_name: db-postgres-exporter
     static_configs:
       - targets: ["host.docker.internal:9187"]
         labels:
           database: postgresql
-          service: auth_db-prediction_db
+          db_role: primary
+          service: auth_db (primary)
+      - targets: ["host.docker.internal:9188"]
+        labels:
+          database: postgresql
+          db_role: replica
+          service: auth_db (replica)
+      - targets: ["host.docker.internal:9189"]
+        labels:
+          database: postgresql
+          db_role: primary
+          service: prediction_db (primary)
+      - targets: ["host.docker.internal:9190"]
+        labels:
+          database: postgresql
+          db_role: replica
+          service: prediction_db (replica)
 
   - job_name: db-mariadb-exporter
     static_configs:
       - targets: ["host.docker.internal:9104"]
         labels:
           database: mariadb
-          service: user-profile-db
+          db_role: primary
+          service: profile_db
 
   - job_name: db-mongodb-exporter
     static_configs:
       - targets: ["host.docker.internal:9216"]
         labels:
           database: mongodb
-          service: health-data-db
+          db_role: replica-set
+          service: health_data_db (rs0)

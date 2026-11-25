@@ -13,7 +13,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "Database Ping & Availability",
+      "title": "Database Ping & Availability (Primary & Replicas)",
       "type": "row"
     },
     {
@@ -22,25 +22,38 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [
-            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+            {
+              "options": {
+                "0": { "color": "red", "text": "DOWN" },
+                "1": { "color": "green", "text": "UP" }
+              },
+              "type": "value"
+            }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
-        }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 1 },
+      "gridPos": { "h": 5, "w": 12, "x": 0, "y": 1 },
       "id": 1,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
+        "textMode": "value_and_name"
       },
-      "title": "PostgreSQL (auth_db / prediction_db) Ping",
+      "title": "PostgreSQL Ping (auth_db & prediction_db Primaries + Replicas)",
       "type": "stat",
       "targets": [
-        { "expr": "pg_up", "legendFormat": "PostgreSQL Status", "refId": "A" }
+        { "expr": "pg_up", "legendFormat": "{{service}}", "refId": "A" }
       ]
     },
     {
@@ -49,25 +62,38 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [
-            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+            {
+              "options": {
+                "0": { "color": "red", "text": "DOWN" },
+                "1": { "color": "green", "text": "UP" }
+              },
+              "type": "value"
+            }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
-        }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 1 },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
       "id": 2,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
+        "textMode": "value_and_name"
       },
       "title": "MariaDB (profile_db) Ping",
       "type": "stat",
       "targets": [
-        { "expr": "mysql_up", "legendFormat": "MariaDB Status", "refId": "A" }
+        { "expr": "mysql_up", "legendFormat": "{{service}}", "refId": "A" }
       ]
     },
     {
@@ -76,133 +102,338 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [
-            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+            {
+              "options": {
+                "0": { "color": "red", "text": "DOWN" },
+                "1": { "color": "green", "text": "UP" }
+              },
+              "type": "value"
+            }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
-        }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
       "id": 3,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
+        "textMode": "value_and_name"
       },
       "title": "MongoDB (health_data_db rs0) Ping",
       "type": "stat",
       "targets": [
-        { "expr": "mongodb_up", "legendFormat": "MongoDB Status", "refId": "A" }
+        { "expr": "mongodb_up", "legendFormat": "{{service}}", "refId": "A" }
       ]
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
       "id": 101,
-      "title": "Database Replication Lag & Replica Member Health",
+      "title": "Replication Lag & Replica Health",
       "type": "row"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "custom": { "axisCenteredZero": false, "axisLabel": "Bytes", "drawStyle": "line", "lineInterpolation": "linear" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "Bytes",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineInterpolation": "linear",
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1048576 },
+              { "color": "red", "value": 10485760 }
+            ]
+          },
           "unit": "decbytes"
-        }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 7 },
       "id": 4,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi" }
       },
-      "title": "PostgreSQL Replication Lag (Bytes)",
+      "title": "PostgreSQL Streaming WAL Replication Lag (Bytes)",
       "type": "timeseries",
       "targets": [
-        { "expr": "pg_stat_replication_bytes or (pg_stat_replication_reply_time * 0)", "legendFormat": "{{application_name}} lag", "refId": "A" }
+        {
+          "expr": "pg_stat_replication_pg_wal_lsn_diff",
+          "legendFormat": "{{service}} -> {{client_addr}} ({{state}})",
+          "refId": "A"
+        }
       ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "custom": { "axisCenteredZero": false, "axisLabel": "Seconds", "drawStyle": "line", "lineInterpolation": "linear" },
-          "unit": "s",
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 5 }, { "color": "red", "value": 30 }] }
-        }
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "Seconds",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineInterpolation": "linear",
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 5 },
+              { "color": "red", "value": 30 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 7 },
       "id": 5,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi" }
       },
-      "title": "MariaDB Replication Delay (Seconds Behind Master)",
+      "title": "PostgreSQL Replica Replay Lag (Seconds)",
       "type": "timeseries",
       "targets": [
-        { "expr": "mysql_slave_status_seconds_behind_master", "legendFormat": "MariaDB Replica Delay", "refId": "A" }
+        {
+          "expr": "pg_replication_lag_seconds{db_role=\"replica\"}",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
       ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "custom": { "axisCenteredZero": false, "axisLabel": "Seconds", "drawStyle": "line", "lineInterpolation": "linear" },
-          "unit": "s",
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 2 }, { "color": "red", "value": 10 }] }
-        }
+          "custom": {
+            "axisCenteredZero": false,
+            "axisLabel": "Seconds",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineInterpolation": "linear",
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 2 },
+              { "color": "red", "value": 10 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 7 },
       "id": 6,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi" }
       },
-      "title": "MongoDB Replica Set Member Lag (Seconds)",
+      "title": "MongoDB Replica Set Secondary Lag (Seconds)",
       "type": "timeseries",
       "targets": [
-        { "expr": "mongodb_mongod_replset_member_replication_lag", "legendFormat": "Member {{member}} Lag", "refId": "A" }
+        {
+          "expr": "mongodb_mongod_replset_member_replication_lag{state!=\"ARBITER\"}",
+          "legendFormat": "{{name}} ({{state}})",
+          "refId": "A"
+        }
       ]
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
       "id": 102,
-      "title": "Active Connections & Resource Health",
+      "title": "Replica Roles, Cluster Membership & Uptime",
       "type": "row"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "custom": { "drawStyle": "line" },
-          "unit": "none"
-        }
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "options": {
+                "0": { "color": "blue", "text": "PRIMARY (RW)" },
+                "1": { "color": "purple", "text": "REPLICA (RO)" }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "purple", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 15 },
+      "gridPos": { "h": 5, "w": 12, "x": 0, "y": 16 },
       "id": 7,
-      "title": "PostgreSQL Active Backends / Connections",
-      "type": "timeseries",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "title": "PostgreSQL Node Roles (Primary vs Streaming Replica)",
+      "type": "stat",
       "targets": [
-        { "expr": "sum(pg_stat_database_numbackends) by (datname)", "legendFormat": "{{datname}} connections", "refId": "A" }
+        { "expr": "pg_replication_is_replica", "legendFormat": "{{service}}", "refId": "A" }
       ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "custom": { "drawStyle": "line" },
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 2 }
+            ]
+          },
           "unit": "none"
-        }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 15 },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 16 },
       "id": 8,
-      "title": "MariaDB Connected Threads",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "title": "MongoDB Replica Set Members (rs0)",
+      "type": "stat",
+      "targets": [
+        { "expr": "mongodb_mongod_replset_number_of_members", "legendFormat": "Total RS Members (P+S+A)", "refId": "A" },
+        { "expr": "mongodb_writableVotingMembersCount", "legendFormat": "Data-Bearing Members", "refId": "B" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 16 },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "title": "MariaDB Uptime (profile_db Primary)",
+      "type": "stat",
+      "targets": [
+        { "expr": "mysql_global_status_uptime", "legendFormat": "{{service}} Uptime", "refId": "A" }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
+      "id": 103,
+      "title": "Active Connections & Throughput",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 15, "showPoints": "auto" },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 22 },
+      "id": 10,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "PostgreSQL Active Connections (Primary & Replica)",
       "type": "timeseries",
       "targets": [
-        { "expr": "mysql_global_status_threads_connected", "legendFormat": "Connected Threads", "refId": "A" }
+        {
+          "expr": "pg_stat_database_numbackends{datname=~\"auth_db|prediction_db\"}",
+          "legendFormat": "{{service}} ({{datname}})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 15, "showPoints": "auto" },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 22 },
+      "id": 11,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "MariaDB Connected Threads & Query Rate (profile_db)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "mysql_global_status_threads_connected",
+          "legendFormat": "Connected Threads ({{service}})",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(mysql_global_status_questions[1m])",
+          "legendFormat": "Queries/sec ({{service}})",
+          "refId": "B"
+        }
       ]
     }
   ],
@@ -214,5 +445,5 @@
   "timezone": "browser",
   "title": "Database Health, Ping & Replication Metrics",
   "uid": "db-replication-metrics",
-  "version": 1
+  "version": 2
 }
