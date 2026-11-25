@@ -19,6 +19,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class SocialLoginAuthenticationSuccessHandler
         this.socialLoginService = socialLoginService;
         this.authUserDetailsService = authUserDetailsService;
         setDefaultTargetUrl("/");
-        setAlwaysUseDefaultTargetUrl(true);
+        setAlwaysUseDefaultTargetUrl(false);
     }
 
     @Override
@@ -87,7 +88,14 @@ public class SocialLoginAuthenticationSuccessHandler
 
         securityContextRepository.saveContext(context, request, response);
 
-        // Clear request cache to prevent saved request redirect loops
+        SavedRequest savedRequest = requestCache.getRequest(request, response);
+        if (savedRequest != null && savedRequest.getRedirectUrl() != null
+                && savedRequest.getRedirectUrl().contains("/oauth2/authorize")) {
+            super.onAuthenticationSuccess(request, response, localAuthentication);
+            return;
+        }
+
+        // Clear non-OAuth2 saved requests to prevent redirect loops
         requestCache.removeRequest(request, response);
         clearAuthenticationAttributes(request);
 

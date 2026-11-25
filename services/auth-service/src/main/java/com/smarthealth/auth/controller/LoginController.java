@@ -149,6 +149,7 @@ public class LoginController {
 
         Map<String, Object> userData = new HashMap<>();
         userData.put("id", user.getId().toString());
+        userData.put("uid", user.getId().toString());
         userData.put("email", user.getEmail());
         userData.put("name", name);
         userData.put("fullName", name);
@@ -179,6 +180,7 @@ public class LoginController {
         }
 
         Object principal = authentication.getPrincipal();
+        String userId = null;
         String email = authentication.getName();
         String name = email != null && email.contains("@") ? email.split("@")[0] : "User";
         List<String> roles = authentication.getAuthorities().stream()
@@ -188,6 +190,9 @@ public class LoginController {
 
         if (principal instanceof AuthenticatedUser authUser) {
             email = authUser.getUsername();
+            if (authUser.getUserId() != null) {
+                userId = authUser.getUserId().toString();
+            }
             name = email != null && email.contains("@") ? email.split("@")[0] : "User";
         } else if (principal instanceof OAuth2User oauth2User) {
             if (oauth2User.getAttribute("email") != null) {
@@ -202,7 +207,18 @@ public class LoginController {
             }
         }
 
+        if (userId == null && email != null && !email.isBlank()) {
+            Optional<User> dbUser = userRepository.findByEmailIgnoreCase(email.trim());
+            if (dbUser.isPresent()) {
+                userId = dbUser.get().getId().toString();
+            }
+        }
+
         Map<String, Object> resp = new HashMap<>();
+        if (userId != null) {
+            resp.put("id", userId);
+            resp.put("uid", userId);
+        }
         resp.put("email", email);
         resp.put("name", name);
         resp.put("fullName", name);

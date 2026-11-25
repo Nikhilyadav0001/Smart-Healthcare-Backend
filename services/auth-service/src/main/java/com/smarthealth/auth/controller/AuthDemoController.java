@@ -29,6 +29,7 @@ import java.util.Map;
 public class AuthDemoController {
 
     private final org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder;
+    private final com.smarthealth.auth.service.ApiKeyService apiKeyService;
 
     @Value("${auth.api-key:smarthealth-dev-secret-api-key-2026}")
     private String validApiKey = "smarthealth-dev-secret-api-key-2026";
@@ -38,7 +39,7 @@ public class AuthDemoController {
 
     public record ApiKeyTestRequest(
             @Schema(
-                    description = "API Key string to validate. Test with 'smarthealth-dev-secret-api-key-2026' for Standard Client, 'smarthealth-admin-secret-key-2026' for Admin privilege, or your own custom key.",
+                    description = "API Key string to validate. Test with 'smarthealth-dev-secret-api-key-2026' (Standard), 'smarthealth-admin-secret-key-2026' (Predefined Admin), or a dynamically generated 'sh_live_...' key from POST /auth/api-keys.",
                     example = "smarthealth-dev-secret-api-key-2026"
             )
             String apiKey
@@ -46,11 +47,20 @@ public class AuthDemoController {
 
     public AuthDemoController() {
         this.jwtEncoder = null;
+        this.apiKeyService = null;
+    }
+
+    public AuthDemoController(org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder) {
+        this.jwtEncoder = jwtEncoder;
+        this.apiKeyService = null;
     }
 
     @org.springframework.beans.factory.annotation.Autowired
-    public AuthDemoController(org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder) {
+    public AuthDemoController(
+            @org.springframework.beans.factory.annotation.Autowired(required = false) org.springframework.security.oauth2.jwt.JwtEncoder jwtEncoder,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.smarthealth.auth.service.ApiKeyService apiKeyService) {
         this.jwtEncoder = jwtEncoder;
+        this.apiKeyService = apiKeyService;
     }
 
     /**
@@ -296,15 +306,18 @@ public class AuthDemoController {
         if (authentication != null && authentication.isAuthenticated() &&
                 authentication.getAuthorities().stream().anyMatch(a -> "ROLE_API_CLIENT".equals(a.getAuthority()))) {
             boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+            boolean isDynamic = authentication.getName() != null && authentication.getName().startsWith("api-key:");
             Map<String, Object> resp = new HashMap<>();
             resp.put("status", "SUCCESS");
             resp.put("valid", true);
-            resp.put("keyType", isAdmin ? "Admin API Key" : "Standard Client API Key");
+            resp.put("keyType", isDynamic ? "Dynamic Database API Key" : (isAdmin ? "Admin API Key" : "Standard Client API Key"));
             resp.put("principal", authentication.getName());
             resp.put("roles", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
-            resp.put("message", isAdmin
-                    ? "Admin API Key validated successfully. Granted full administrative ROLE_ADMIN privileges."
-                    : "Standard API Key validated successfully. Granted ROLE_API_CLIENT authority.");
+            resp.put("message", isDynamic
+                    ? "Dynamic API Key validated against PostgreSQL auth_db."
+                    : (isAdmin
+                        ? "Admin API Key validated successfully. Granted full administrative ROLE_ADMIN privileges."
+                        : "Standard API Key validated successfully. Granted ROLE_API_CLIENT authority."));
             resp.put("timestamp", Instant.now().toString());
             return ResponseEntity.ok(resp);
         }
@@ -331,6 +344,23 @@ public class AuthDemoController {
                 resp.put("message", "Standard API Key matched. Client granted ROLE_API_CLIENT authority.");
                 resp.put("timestamp", Instant.now().toString());
                 return ResponseEntity.ok(resp);
+            } else if (apiKeyService != null) {
+                var dynamicOpt = apiKeyService.validateAndTouch(key);
+                if (dynamicOpt.isPresent()) {
+                    var dynamicKey = dynamicOpt.get();
+                    Map<String, Object> resp = new HashMap<>();
+                    resp.put("status", "SUCCESS");
+                    resp.put("valid", true);
+                    resp.put("keyType", "Dynamic Database API Key");
+                    resp.put("keyId", dynamicKey.getId());
+                    resp.put("keyName", dynamicKey.getName());
+                    resp.put("keyPrefix", dynamicKey.getKeyPrefix());
+                    resp.put("principal", "api-key:" + dynamicKey.getName());
+                    resp.put("roles", apiKeyService.toRoleStrings(dynamicKey.getRoles()));
+                    resp.put("message", "Dynamic API Key validated against PostgreSQL auth_db.");
+                    resp.put("timestamp", Instant.now().toString());
+                    return ResponseEntity.ok(resp);
+                }
             }
         }
 

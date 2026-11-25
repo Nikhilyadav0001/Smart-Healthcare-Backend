@@ -135,6 +135,7 @@ public class AuthorizationServerConfig {
                                 "/me"
                         ).permitAll()
                         .requestMatchers("/auth/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/auth/api-keys", "/auth/api-keys/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/auth/demo/bearer-jwt").authenticated()
                         .requestMatchers("/auth/demo/service-to-service").authenticated()
                         .requestMatchers("/auth/**").permitAll()
@@ -330,6 +331,37 @@ public class AuthorizationServerConfig {
                             )
                             .build();
             repository.save(healthDataClient);
+        }
+
+        // Seed postman-oauth2 public PKCE client for Postman OAuth 2.0 (Google Social Login -> Authorization Code + PKCE)
+        RegisteredClient existingPostman = repository.findByClientId("postman-oauth2");
+        if (existingPostman == null) {
+            RegisteredClient postmanClient =
+                    RegisteredClient.withId(UUID.randomUUID().toString())
+                            .clientId("postman-oauth2")
+                            .clientName("Postman OAuth 2.0 PKCE Client")
+                            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+                            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                            .redirectUri("https://oauth.pstmn.io/v1/callback")
+                            .redirectUri("https://oauth.pstmn.io/v1/browser-callback")
+                            .scope(OidcScopes.OPENID)
+                            .scope(OidcScopes.PROFILE)
+                            .scope(OidcScopes.EMAIL)
+                            .clientSettings(
+                                    ClientSettings.builder()
+                                            .requireProofKey(true)
+                                            .requireAuthorizationConsent(false)
+                                            .build()
+                            )
+                            .tokenSettings(
+                                    TokenSettings.builder()
+                                            .accessTokenTimeToLive(Duration.ofMinutes(30))
+                                            .refreshTokenTimeToLive(Duration.ofDays(1))
+                                            .build()
+                            )
+                            .build();
+            repository.save(postmanClient);
         }
 
         return repository;
