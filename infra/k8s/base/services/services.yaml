@@ -47,6 +47,12 @@ spec:
               value: "false"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
           resources:
             requests:
               cpu: 100m
@@ -120,6 +126,12 @@ spec:
               value: "false"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
           resources:
             requests:
               cpu: 100m
@@ -191,6 +203,12 @@ spec:
               value: "false"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
           resources:
             requests:
               cpu: 100m
@@ -275,6 +293,12 @@ spec:
               value: "false"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
           resources:
             requests:
               cpu: 100m
@@ -400,6 +424,12 @@ spec:
               value: "false"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
           resources:
             requests:
               cpu: 100m
@@ -415,6 +445,7 @@ metadata:
   namespace: smart-healthcare
 spec:
   type: LoadBalancer
+  sessionAffinity: ClientIP
   selector:
     app: auth-service
   ports:
@@ -504,6 +535,12 @@ spec:
               value: "false"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
           resources:
             requests:
               cpu: 100m
@@ -607,6 +644,12 @@ spec:
               value: "false"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
           resources:
             requests:
               cpu: 100m
@@ -703,6 +746,12 @@ spec:
               value: "false"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
           resources:
             requests:
               cpu: 100m
@@ -776,6 +825,12 @@ spec:
               value: "http://host.docker.internal:4318"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://host.docker.internal:4318"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.pod.name=$(POD_NAME)"
             - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
               value: "*"
             - name: MANAGEMENT_ENDPOINT_SHUTDOWN_ENABLED

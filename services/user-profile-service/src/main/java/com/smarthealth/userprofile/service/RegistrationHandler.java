@@ -38,11 +38,25 @@ public class RegistrationHandler {
         String eventId = field(n, "eventId");
         String userId = field(n, "userId");
         String email = field(n, "email");
+        String fullName = n.has("fullName") && !n.get("fullName").isNull()
+                ? n.get("fullName").asString("").trim()
+                : "";
 
         if (processed.existsById(eventId)) return;              // idempotent consumer
 
         if (!profiles.existsById(userId)) {
-            profiles.save(new ProfileEntity(userId, email));
+            ProfileEntity entity = new ProfileEntity(userId, email);
+            if (!fullName.isEmpty()) {
+                entity.setFullName(fullName);
+            }
+            profiles.save(entity);
+        } else if (!fullName.isEmpty()) {
+            profiles.findById(userId).ifPresent(existing -> {
+                if (existing.getFullName() == null || existing.getFullName().isBlank()) {
+                    existing.setFullName(fullName);
+                    profiles.save(existing);
+                }
+            });
         }
         outbox.save(OutboxEvent.of("user.profile.created", userId, envelope(userId, null)));
         processed.save(new ProcessedEvent(eventId));
